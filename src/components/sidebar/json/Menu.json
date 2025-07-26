@@ -1,0 +1,69 @@
+[
+  {
+    "id": "dashboard",
+    "label": "Dashboard",
+    "icon": "dashboard",
+    "path": "/"
+  },
+   {
+    "id": "reservations",
+    "label": "Gestión de reservas",
+    "icon": "event",
+     "children": [
+      { "id": "reservations", "label": "Reservaciones", "icon": "add_box", "path": "/reservations" },
+      { "id": "reservas-activas", "label": "Reservas Activas", "icon": "event_busy", "path": "/reservations/activas" },
+      { "id": "calendario-reservas", "label": "Calendario de Reservas", "icon": "calendar_month", "path": "/reservations/calendario" }
+    ]
+  },
+  {
+    "id": "cotizaciones",
+    "label": "Gestión de Cotizaciones",
+    "icon": "description",
+    "children": [
+      { "id": "nueva-cotizacion", "label": "Nueva Cotización", "icon": "add_circle", "path": "/cotizaciones/nueva" },
+      { "id": "cotizaciones-pendientes", "label": "Cotizaciones Pendientes", "icon": "pending", "path": "/cotizaciones/pendientes" },
+      { "id": "cotizaciones-aprobadas", "label": "Cotizaciones Aprobadas", "icon": "check_circle", "path": "/cotizaciones/aprobadas" },
+      { "id": "historial-cotizaciones", "label": "Historial de Cotizaciones", "icon": "history", "path": "/cotizaciones/historial" }
+    ]
+  },
+  {
+    "id": "clientes",
+    "label": "Seguimiento de Clientes",
+    "icon": "phone",
+    "children": [
+      { "id": "leads", "label": "Clientes Potenciales (Leads)", "icon": "person_add", "path": "/clientes/leads" },
+      { "id": "contactos", "label": "Contactos", "icon": "contacts", "path": "/clientes/contactos" },
+      { "id": "seguimiento", "label": "Seguimiento / Recordatorios", "icon": "schedule", "path": "/clientes/seguimiento" }
+    ]
+  },
+  {
+    "id": "yates",
+    "label": "Gestión de Yates",
+    "icon": "sailing",
+    "children": [
+      { "id": "lista-yates", "label": "Lista de Yates", "icon": "list", "path": "/yates/lista" },
+      { "id": "disponibilidad", "label": "Disponibilidad", "icon": "event_available", "path": "/yates/disponibilidad" },
+      { "id": "mantenimiento", "label": "Mantenimiento", "icon": "build", "path": "/yates/mantenimiento" }
+    ]
+  },
+  {
+    "id": "reservas",
+    "label": "Reservas",
+    "icon": "event",
+    "children": [
+      { "id": "crear-reserva", "label": "Crear Reserva", "icon": "add_box", "path": "/reservas/crear" },
+      { "id": "reservas-activas", "label": "Reservas Activas", "icon": "event_busy", "path": "/reservas/activas" },
+      { "id": "calendario-reservas", "label": "Calendario de Reservas", "icon": "calendar_month", "path": "/reservas/calendario" }
+    ]
+  },
+  {
+    "id": "pagos",
+    "label": "Procesos de Pago",
+    "icon": "credit_card",
+    "children": [
+      { "id": "pagos-pendientes", "label": "Pagos Pendientes", "icon": "pending_actions", "path": "/pagos/pendientes" },
+      { "id": "pagos-confirmados", "label": "Pagos Confirmados", "icon": "verified", "path": "/pagos/confirmados" },
+      { "id": "historial-pagos", "label": "Historial de Pagos", "icon": "payment", "path": "/pagos/historial" }
+    ]
+  }
+]
