@@ -23,7 +23,7 @@ interface YachtTypeStore {
   setEditingType: (type: YachtType | null) => void;
 }
 
-export const useYachtTypeStore = create<YachtTypeStore>((set) => ({
+export const useYachtTypeStore = create<YachtTypeStore>((set, get) => ({
   // Initial state
   yachtTypes: [],
   searchTerm: '',
