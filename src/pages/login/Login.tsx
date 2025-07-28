@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useStore } from '../../zustand/useStore';
 import './Login.css';
+import APIs from '../../services/services/APIs';
+import useUserStore from '../../zustand/useUserStore';
+import toast, { Toaster } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+
 
 const Login: React.FC = () => {
+  const { theme, toggleTheme } = useStore();
+  const { getUser }: any = useUserStore()
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -10,7 +19,7 @@ const Login: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+  // SuperAdmin123!
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -22,21 +31,31 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Mock login functionality
-    setTimeout(() => {
-      console.log('Login attempted with:', formData);
-      setIsLoading(false);
-    }, 2000);
-  };
 
-  const toggleTheme = () => {
-    // Mock theme toggle
-    console.log('Theme toggle');
+    try {
+      const res: any = await APIs.login(formData);
+      console.log('Respuesta del login:', res);
+      
+      getUser({ ...res.user, rol: 'SUPER_ADMIN' });
+      toast.success(res.message || 'Inicio de sesión exitoso');
+      
+      console.log('Redirigiendo a /');
+      navigate('/');
+      
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error en login:', err);
+      toast.error('Error al iniciar sesión');
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="yacht-login-container">
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+      />
       {/* Background Pattern */}
       <div className="yacht-login-background">
         <div className="yacht-bg-pattern"></div>
@@ -49,7 +68,7 @@ const Login: React.FC = () => {
         <div className="yacht-login-header">
           <button className="yacht-theme-toggle-login" onClick={toggleTheme}>
             <span className="material-icons">
-              light_mode
+              {theme === 'light' ? 'dark_mode' : 'light_mode'}
             </span>
           </button>
         </div>
@@ -142,6 +161,13 @@ const Login: React.FC = () => {
             )}
           </button>
         </form>
+
+        {/* Demo Credentials */}
+        {/* <div className="yacht-demo-credentials">
+          <h4>Credenciales de Demo:</h4>
+          <p><strong>Email:</strong> admin@yachtcrm.com</p>
+          <p><strong>Contraseña:</strong> admin123</p>
+        </div> */}
 
         {/* Footer */}
         <div className="yacht-login-footer">
