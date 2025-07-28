@@ -5,7 +5,7 @@ import type { AxiosInstance, AxiosResponse } from 'axios';
 class ApiService {
   private axiosInstance: AxiosInstance;
 
-  constructor(baseURL: string = 'http://localhost:3000/') {
+  constructor(baseURL: string = 'https://jllc-back.com/kana-experience/') {
     // constructor(baseURL: string = '') {
     this.axiosInstance = axios.create({
       baseURL,
