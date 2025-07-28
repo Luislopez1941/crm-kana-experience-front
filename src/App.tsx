@@ -1,9 +1,10 @@
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 import RoutesWithNotFound from './utils/routes-with-not-found';
-import { PublicRoutes, PrivateRoutes } from './models/routes';
+import { PublicRoutes } from './models/routes';
 import RouteProtector from './pages/private/RouteProtector';
 import AuthGuard from './guards/auth.guard';
 import Login from './pages/login/Login';
+import GlobalPopup from './components/popups/GlobalPopup';
 import './App.css'
 
 
@@ -17,6 +18,7 @@ function App() {
           <Route path={`/*`} element={<RouteProtector />} />
         </Route>
       </RoutesWithNotFound>
+      <GlobalPopup />
     </Router>
   )
 }

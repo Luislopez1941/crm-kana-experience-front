@@ -1,10 +1,12 @@
-import React from 'react'
 import Sidebar from '../../../components/sidebar/Sidebar'
 import Header from '../../../components/header/Header'
 import { Routes, Route } from 'react-router-dom';
 import Dashboard from '../../../components/sidebar/sections/dashboard/Dashboard';
 import './RootPage.css';
 import RouteReservations from '../../../routes/sidebar/RouteReservations';
+import RouteYacht from '../../../routes/sidebar/RouteYacht';
+import RouteTours from '../../../routes/sidebar/RouteTours';
+import { PrivateRoutes } from '../../../models/routes';
 
 const RootPage = () => {
     return (
@@ -15,7 +17,9 @@ const RootPage = () => {
                 <div className='main__container'>
                     <Routes>
                     <Route path="*" element={<Dashboard />} />
-                    <Route path="/reservations" element={<RouteReservations />} />
+                    <Route path={`/${PrivateRoutes.RESERVATIONS}`} element={<RouteReservations />} />
+                    <Route path={`/${PrivateRoutes.YACHTS}/*`} element={<RouteYacht />} />
+                    <Route path={`/${PrivateRoutes.TOURS}/*`} element={<RouteTours />} />
                 </Routes>
                 </div>
             </div>

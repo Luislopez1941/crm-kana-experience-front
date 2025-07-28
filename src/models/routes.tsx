@@ -9,9 +9,17 @@ export const PrivateRoutes = {
   HOME: 'Home',
   CRM: 'crm-admin',
 
-  //Secciones ///
+  //Secciones de Reservas ///
   RESERVATIONS: 'reservations',
+  YACHTS: 'yachts',
+  TYPE_YACHTS: 'type-yachts',
 
+  //Secciones de Tours ///
+  TOURS: 'tours',
+  TOUR_TYPES: 'tour-types',
+
+  //Secciones de Clubs ///
+  CLUBS: 'clubs',
 
   PROCESSOS: 'processes',
   CATALOGUE: 'catalogue',

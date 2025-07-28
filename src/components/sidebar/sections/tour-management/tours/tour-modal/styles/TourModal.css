@@ -1,0 +1,484 @@
+/* Tour Modal Styles */
+.tour-modal .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-lg);
+}
+
+.tour-modal .tour-modal-container {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 95%;
+  height: 95vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px var(--shadow-lg);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tour-modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border);
+}
+
+.tour-modal .modal-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.tour-modal .modal-title .material-icons {
+  color: var(--primary);
+  font-size: 1.5rem;
+}
+
+.tour-modal .modal-title h2 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  margin: 0;
+}
+
+.tour-modal .close-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tour-modal .close-btn:hover {
+  background-color: var(--background-secondary);
+  color: var(--text);
+}
+
+.tour-modal .modal-content {
+  padding: var(--spacing-lg);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.tour-modal .tour-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.tour-modal .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-lg);
+}
+
+.tour-modal .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.tour-modal .form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.tour-modal .form-group label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text);
+}
+
+.tour-modal .form-group input,
+.tour-modal .form-group select,
+.tour-modal .form-group textarea {
+  padding: var(--spacing-md);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--background);
+  color: var(--text);
+  font-size: var(--font-size-base);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.tour-modal .form-group input:focus,
+.tour-modal .form-group select:focus,
+.tour-modal .form-group textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.tour-modal .form-group input:disabled,
+.tour-modal .form-group select:disabled,
+.tour-modal .form-group textarea:disabled {
+  background-color: var(--background-secondary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.tour-modal .form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+/* Characteristics Section */
+.tour-modal .characteristics-input {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.tour-modal .characteristics-input input {
+  flex: 1;
+}
+
+.tour-modal .add-characteristic-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tour-modal .add-characteristic-btn:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.tour-modal .add-characteristic-btn:disabled {
+  background-color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.tour-modal .characteristics-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.tour-modal .characteristic-tag {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  transition: all 0.2s ease;
+}
+
+.tour-modal .characteristic-tag:hover {
+  background-color: var(--primary);
+  color: white;
+}
+
+.tour-modal .remove-characteristic {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  transition: all 0.2s ease;
+}
+
+.tour-modal .remove-characteristic:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.tour-modal .remove-characteristic .material-icons {
+  font-size: 0.875rem;
+}
+
+/* Image Upload Section */
+.tour-modal .image-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: var(--background);
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tour-modal .image-dropzone:hover,
+.tour-modal .image-dropzone.drag-active {
+  border-color: var(--primary);
+  background-color: rgba(13, 102, 233, 0.05);
+}
+
+.tour-modal .image-dropzone.has-images {
+  padding: var(--spacing-md);
+}
+
+.tour-modal .dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.tour-modal .dropzone-content .material-icons {
+  font-size: 3rem;
+  color: var(--primary);
+}
+
+.tour-modal .dropzone-content p {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text);
+  margin: 0;
+}
+
+.tour-modal .dropzone-content small {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.tour-modal .images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+.tour-modal .image-preview-item {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  aspect-ratio: 1;
+  border: 1px solid var(--border);
+}
+
+.tour-modal .image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tour-modal .remove-single-image-btn {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  background-color: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tour-modal .remove-single-image-btn:hover {
+  background-color: #ef4444;
+}
+
+.tour-modal .remove-single-image-btn .material-icons {
+  font-size: 1rem;
+}
+
+.tour-modal .add-more-images {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  aspect-ratio: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tour-modal .add-more-images:hover {
+  border-color: var(--primary);
+  background-color: rgba(13, 102, 233, 0.05);
+}
+
+.tour-modal .add-more-images .material-icons {
+  color: var(--primary);
+  font-size: 1.5rem;
+}
+
+.tour-modal .add-more-images p {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin: 0;
+  text-align: center;
+}
+
+.tour-modal .remove-all-images-btn {
+  background: none;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  transition: all 0.2s ease;
+  margin-top: var(--spacing-sm);
+}
+
+.tour-modal .remove-all-images-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.tour-modal .remove-all-images-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal Actions */
+.tour-modal .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border);
+  margin-top: var(--spacing-lg);
+}
+
+.tour-modal .modal-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.tour-modal .btn-secondary {
+  background-color: var(--background-secondary);
+  color: var(--text-secondary);
+}
+
+.tour-modal .btn-secondary:hover {
+  background-color: var(--border);
+  color: var(--text);
+}
+
+.tour-modal .btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.tour-modal .btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.tour-modal .btn-primary:disabled {
+  background-color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.tour-modal .loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tour-modal .tour-modal-container {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+  }
+  
+  .tour-modal .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tour-modal .modal-actions {
+    flex-direction: column;
+  }
+  
+  .tour-modal .modal-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .tour-modal .modal-overlay {
+    padding: var(--spacing-sm);
+  }
+  
+  .tour-modal .modal-header,
+  .tour-modal .modal-content {
+    padding: var(--spacing-md);
+  }
+  
+  .tour-modal .image-dropzone {
+    min-height: 150px;
+  }
+  
+  .tour-modal .dropzone-content .material-icons {
+    font-size: 2rem;
+  }
+  
+  .tour-modal .dropzone-content p {
+    font-size: var(--font-size-base);
+  }
+} 

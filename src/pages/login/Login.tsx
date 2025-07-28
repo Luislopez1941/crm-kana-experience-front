@@ -2,9 +2,16 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../zustand/useStore';
 import './Login.css';
+import APIs from '../../services/services/APIs';
+import useUserStore from '../../zustand/useUserStore';
+import toast, { Toaster } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+
 
 const Login: React.FC = () => {
-  const { theme, toggleTheme, login } = useStore();
+  const { theme, toggleTheme } = useStore();
+  const { getUser }: any = useUserStore()
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -12,7 +19,7 @@ const Login: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+  // SuperAdmin123!
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -24,22 +31,31 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      login({
-        id: '1',
-        name: 'Admin',
-        email: formData.email,
-        role: 'Administrador',
-        avatar: ''
-      });
+
+    try {
+      const res: any = await APIs.login(formData);
+      console.log('Respuesta del login:', res);
+      
+      getUser({ ...res.user, rol: 'SUPER_ADMIN' });
+      toast.success(res.message || 'Inicio de sesión exitoso');
+      
+      console.log('Redirigiendo a /');
+      navigate('/');
+      
       setIsLoading(false);
-    }, 1500);
+    } catch (err) {
+      console.error('Error en login:', err);
+      toast.error('Error al iniciar sesión');
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="login-container">
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+      />
       {/* Background Pattern */}
       <div className="login-background">
         <div className="bg-pattern"></div>

@@ -1,9 +1,11 @@
 import React from 'react';
 import { useStore } from '../../zustand/useStore';
+import useUserStore from '../../zustand/useUserStore';
 import './styles/Header.css';
 
 const Header: React.FC = () => {
-  const { sidebarCollapsed, toggleSidebar, theme, toggleTheme, user, logout } = useStore();
+  const { toggleSidebar, theme, toggleTheme, logout } = useStore();
+  const { user } = useUserStore();
 
   const getCurrentDateTime = () => {
     const now = new Date();
@@ -78,8 +80,8 @@ const Header: React.FC = () => {
               <span className="material-icons">person</span>
             </div>
             <div className="user-info">
-              <div className="user-name">{user?.name || 'Usuario'}</div>
-              <div className="user-role">{user?.role || 'Usuario'}</div>
+              <div className="user-name">{user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Usuario'}</div>
+              <div className="user-role">{user?.rol || 'Usuario'}</div>
             </div>
             <button className="user-menu-btn" onClick={logout} title="Cerrar Sesión">
               <span className="material-icons">logout</span>

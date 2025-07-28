@@ -53,6 +53,9 @@ interface ReservationStore {
   updateYacht: (id: string, yacht: Partial<Yacht>) => void;
   deleteYacht: (id: string) => void;
   toggleYachtAvailability: (id: string) => void;
+  
+  // Helper function
+  filterReservations: (reservations: Reservation[], searchTerm: string, statusFilter: string) => Reservation[];
 }
 
 // Mock data

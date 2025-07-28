@@ -28,13 +28,15 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ item, level }) => {
     sidebarCollapsed 
   } = useStore();
 
-  const hasChildren = item.children && item.children.length > 0;
+  const hasChildren = Boolean(item.children && item.children.length > 0);
   const isExpanded = expandedMenus.includes(item.id);
   const isActive = activeMenuItem === item.id;
 
   const handleClick = () => {
     if (hasChildren) {
       toggleMenuExpansion(item.id);
+    } else if (item.path) {
+      setActiveMenuItem(item.id);
     } else {
       setActiveMenuItem(item.id);
     }
@@ -64,7 +66,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ item, level }) => {
 
   return (
     <div className="sidebar-item-wrapper">
-      {item.path ? (
+      {item.path && !hasChildren ? (
         <Link to={item.path} className="sidebar-link">
           {ItemContent}
         </Link>

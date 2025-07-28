@@ -1,0 +1,158 @@
+import React, { useState, useEffect } from 'react';
+import { usePopupStore } from '../../../../../../zustand/popupStore';
+import APIs from '../../../../../../services/services/APIs';
+import './styles/ClubTypeModal.css';
+
+interface ClubTypeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  editingType?: any;
+}
+
+interface ClubTypeForm {
+  name: string;
+}
+
+const ClubTypeModal: React.FC<ClubTypeModalProps> = ({ isOpen, onClose, onSuccess, editingType }) => {
+  const { showSuccess, showError } = usePopupStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<ClubTypeForm>({
+    name: ''
+  });
+
+  useEffect(() => {
+    if (editingType) {
+      setFormData({
+        name: editingType.name || ''
+      });
+    } else {
+      setFormData({
+        name: ''
+      });
+    }
+  }, [editingType]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      if (!formData.name.trim()) {
+        showError('El nombre del tipo de club es requerido');
+        return;
+      }
+
+      if (editingType) {
+        // Update existing club type
+        const response: any = await APIs.updateClubType(editingType.id, formData);
+        showSuccess(response.message || 'Tipo de club actualizado exitosamente');
+        onSuccess();
+        handleClose();
+      } else {
+        // Create new club type
+        const response: any = await APIs.createClubType(formData);
+        showSuccess(response.message || 'Tipo de club creado exitosamente');
+        onSuccess();
+        handleClose();
+      }
+    } catch (error: any) {
+      console.error('Error saving club type:', error);
+      
+      if (error.response?.data?.message) {
+        showError(error.response.data.message);
+      } else if (error.message) {
+        showError(error.message);
+      } else {
+        showError('Error al guardar el tipo de club');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    setFormData({ name: '' });
+    setIsLoading(false);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="club-type-modal">
+      <div className="modal-overlay" onClick={handleClose}>
+        <div className="club-type-modal-container" onClick={(e) => e.stopPropagation()}>
+          {/* Modal Header */}
+          <div className="modal-header">
+            <div className="modal-title">
+              <span className="material-icons">category</span>
+              <h2>{editingType ? 'Editar Tipo de Club' : 'Nuevo Tipo de Club'}</h2>
+            </div>
+            <button className="close-btn" onClick={handleClose}>
+              <span className="material-icons">close</span>
+            </button>
+          </div>
+
+          {/* Modal Content */}
+          <div className="modal-content">
+            <form className="club-type-form" onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="name">Nombre del Tipo *</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Ej: Nocturno, Playa, VIP"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Modal Actions */}
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handleClose}
+                  disabled={isLoading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="loading-spinner"></span>
+                      {editingType ? 'Actualizando...' : 'Creando...'}
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-icons">save</span>
+                      {editingType ? 'Actualizar Tipo' : 'Crear Tipo'}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ClubTypeModal; 

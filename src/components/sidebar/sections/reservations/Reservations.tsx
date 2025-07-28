@@ -45,9 +45,9 @@ const Reservaciones: React.FC = () => {
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-MX', {
       style: 'currency',
-      currency: 'EUR'
+      currency: 'MXN'
     }).format(price);
   };
 
@@ -74,47 +74,7 @@ const Reservaciones: React.FC = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon confirmed">
-            <span className="material-icons">check_circle</span>
-          </div>
-          <div className="stat-content">
-            <h3>{filteredReservations.filter(r => r.status === 'confirmed').length}</h3>
-            <p>Reservas Confirmadas</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon pending">
-            <span className="material-icons">schedule</span>
-          </div>
-          <div className="stat-content">
-            <h3>{filteredReservations.filter(r => r.status === 'pending').length}</h3>
-            <p>Reservas Pendientes</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon revenue">
-            <span className="material-icons">trending_up</span>
-          </div>
-          <div className="stat-content">
-            <h3>{formatPrice(filteredReservations.reduce((total, r) => total + r.totalPrice, 0))}</h3>
-            <p>Ingresos Total</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon total">
-            <span className="material-icons">sailing</span>
-          </div>
-          <div className="stat-content">
-            <h3>{filteredReservations.length}</h3>
-            <p>Total Reservas</p>
-          </div>
-        </div>
-      </div>
+   
 
       {/* Reservations List */}
       <div className="reservations-section">

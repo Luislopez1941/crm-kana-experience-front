@@ -116,9 +116,9 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-MX', {
       style: 'currency',
-      currency: 'EUR'
+      currency: 'MXN'
     }).format(price);
   };
 
@@ -253,8 +253,8 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
                           <span>{yacht.capacity} personas</span>
                         </div>
                         <div className="detail">
-                          <span className="material-icons sm">euro</span>
-                          <span>{formatPrice(yacht.price)}/día</span>
+                          <span className="material-icons sm">payments</span>
+                          <span>{formatPrice(yacht.price)}/hora</span>
                         </div>
                       </div>
                       
@@ -298,7 +298,7 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
                 <div className="selected-yacht-summary">
                   <span className="material-icons">sailing</span>
                   <span>{formData.selectedYacht?.name}</span>
-                  <span className="price">{formatPrice(formData.selectedYacht?.price || 0)}/día</span>
+                  <span className="price">{formatPrice(formData.selectedYacht?.price || 0)}/hora</span>
                 </div>
               </div>
 
@@ -425,7 +425,7 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
                         <span>{calculateDays(formData.startDate, formData.endDate)} días</span>
                       </div>
                       <div className="detail-row">
-                        <span>Precio por día:</span>
+                        <span>Precio por hora:</span>
                         <span>{formatPrice(formData.selectedYacht?.price || 0)}</span>
                       </div>
                       <div className="detail-row total">

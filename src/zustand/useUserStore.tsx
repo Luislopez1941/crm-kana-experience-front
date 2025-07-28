@@ -3,23 +3,21 @@ import { persistLocalStorage, clearLocalStorage } from '../utils/localStorage.ut
 
 export interface UserInfo {
   id: number;
-  sucursal_id: number;
-  nombre: string;
   email: string;
-  password: string;
-  tipo_us: number;
+  firstName: string;
+  lastName: string;
+  rol: string;
 }
 
 export const EmptyUserState: UserInfo = {
   id: 0,
-  sucursal_id: 0,
-  nombre: '',
   email: '',
-  password: '',
-  tipo_us: 0
+  firstName: '',
+  lastName: '',
+  rol: ''
 };
 
-export const UserKey = 'user';
+export const UserKey = 'userKana';
 
 interface UserStore {
   url_img: string;

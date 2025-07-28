@@ -5,65 +5,94 @@
     "icon": "dashboard",
     "path": "/"
   },
-   {
+  {
     "id": "reservations",
-    "label": "Gestión de reservas",
+    "label": "Gestión de Reservas",
     "icon": "event",
-     "children": [
+    "children": [
       { "id": "reservations", "label": "Reservaciones", "icon": "add_box", "path": "/reservations" },
-      { "id": "reservas-activas", "label": "Reservas Activas", "icon": "event_busy", "path": "/reservations/activas" },
-      { "id": "calendario-reservas", "label": "Calendario de Reservas", "icon": "calendar_month", "path": "/reservations/calendario" }
+      { "id": "active-reservations", "label": "Reservas Activas", "icon": "event_available", "path": "/reservations/active" },
+      { "id": "reservation-calendar", "label": "Calendario de Reservas", "icon": "calendar_month", "path": "/reservations/calendar" }
     ]
   },
   {
-    "id": "cotizaciones",
-    "label": "Gestión de Cotizaciones",
-    "icon": "description",
-    "children": [
-      { "id": "nueva-cotizacion", "label": "Nueva Cotización", "icon": "add_circle", "path": "/cotizaciones/nueva" },
-      { "id": "cotizaciones-pendientes", "label": "Cotizaciones Pendientes", "icon": "pending", "path": "/cotizaciones/pendientes" },
-      { "id": "cotizaciones-aprobadas", "label": "Cotizaciones Aprobadas", "icon": "check_circle", "path": "/cotizaciones/aprobadas" },
-      { "id": "historial-cotizaciones", "label": "Historial de Cotizaciones", "icon": "history", "path": "/cotizaciones/historial" }
-    ]
-  },
-  {
-    "id": "clientes",
-    "label": "Seguimiento de Clientes",
-    "icon": "phone",
-    "children": [
-      { "id": "leads", "label": "Clientes Potenciales (Leads)", "icon": "person_add", "path": "/clientes/leads" },
-      { "id": "contactos", "label": "Contactos", "icon": "contacts", "path": "/clientes/contactos" },
-      { "id": "seguimiento", "label": "Seguimiento / Recordatorios", "icon": "schedule", "path": "/clientes/seguimiento" }
-    ]
-  },
-  {
-    "id": "yates",
+    "id": "yacht-management",
     "label": "Gestión de Yates",
     "icon": "sailing",
     "children": [
-      { "id": "lista-yates", "label": "Lista de Yates", "icon": "list", "path": "/yates/lista" },
-      { "id": "disponibilidad", "label": "Disponibilidad", "icon": "event_available", "path": "/yates/disponibilidad" },
-      { "id": "mantenimiento", "label": "Mantenimiento", "icon": "build", "path": "/yates/mantenimiento" }
+      { "id": "yachts", "label": "Yates", "icon": "list", "path": "/yachts" },
+      { "id": "yacht-types", "label": "Tipos de Yate", "icon": "category", "path": "/yachts/type-yachts" }
+    ]
+  },
+  
+  {
+    "id": "tours",
+    "label": "Gestión de Tours",
+    "icon": "explore",
+    "children": [
+      { "id": "tours", "label": "Tours", "icon": "add_circle", "path": "/tours" },
+      { "id": "tour-types", "label": "Tipos de Tours", "icon": "category", "path": "/tours/tour-types" }
     ]
   },
   {
-    "id": "reservas",
-    "label": "Reservas",
-    "icon": "event",
+    "id": "clubs",
+    "label": "Gestión de Clubs",
+    "icon": "nightlife",
     "children": [
-      { "id": "crear-reserva", "label": "Crear Reserva", "icon": "add_box", "path": "/reservas/crear" },
-      { "id": "reservas-activas", "label": "Reservas Activas", "icon": "event_busy", "path": "/reservas/activas" },
-      { "id": "calendario-reservas", "label": "Calendario de Reservas", "icon": "calendar_month", "path": "/reservas/calendario" }
+      { "id": "clubs", "label": "Clubs", "icon": "add_circle", "path": "/clubs" },
+      { "id": "active-clubs", "label": "Clubs Activos", "icon": "local_bar", "path": "/clubs/active" },
+      { "id": "club-calendar", "label": "Calendario de Clubs", "icon": "calendar_month", "path": "/clubs/calendar" }
     ]
   },
   {
-    "id": "pagos",
-    "label": "Procesos de Pago",
-    "icon": "credit_card",
+    "id": "quotes",
+    "label": "Gestión de Cotizaciones",
+    "icon": "description",
     "children": [
-      { "id": "pagos-pendientes", "label": "Pagos Pendientes", "icon": "pending_actions", "path": "/pagos/pendientes" },
-      { "id": "pagos-confirmados", "label": "Pagos Confirmados", "icon": "verified", "path": "/pagos/confirmados" },
-      { "id": "historial-pagos", "label": "Historial de Pagos", "icon": "payment", "path": "/pagos/historial" }
+      { "id": "new-quote", "label": "Nueva Cotización", "icon": "add_circle", "path": "/quotes/new" },
+      { "id": "pending-quotes", "label": "Cotizaciones Pendientes", "icon": "pending", "path": "/quotes/pending" },
+      { "id": "approved-quotes", "label": "Cotizaciones Aprobadas", "icon": "check_circle", "path": "/quotes/approved" },
+      { "id": "quote-history", "label": "Historial de Cotizaciones", "icon": "history", "path": "/quotes/history" }
+    ]
+  },
+  {
+    "id": "clients",
+    "label": "Gestión de Clientes",
+    "icon": "people",
+    "children": [
+      { "id": "leads", "label": "Clientes Potenciales", "icon": "person_add", "path": "/clients/leads" },
+      { "id": "contacts", "label": "Contactos", "icon": "contacts", "path": "/clients/contacts" },
+      { "id": "follow-up", "label": "Seguimiento", "icon": "schedule", "path": "/clients/follow-up" }
+    ]
+  },
+  {
+    "id": "payments",
+    "label": "Gestión de Pagos",
+    "icon": "payments",
+    "children": [
+      { "id": "pending-payments", "label": "Pagos Pendientes", "icon": "pending_actions", "path": "/payments/pending" },
+      { "id": "confirmed-payments", "label": "Pagos Confirmados", "icon": "verified", "path": "/payments/confirmed" },
+      { "id": "payment-history", "label": "Historial de Pagos", "icon": "payment", "path": "/payments/history" }
+    ]
+  },
+  {
+    "id": "reports",
+    "label": "Reportes y Analytics",
+    "icon": "analytics",
+    "children": [
+      { "id": "sales-reports", "label": "Reportes de Ventas", "icon": "trending_up", "path": "/reports/sales" },
+      { "id": "client-reports", "label": "Reportes de Clientes", "icon": "people", "path": "/reports/clients" },
+      { "id": "financial-reports", "label": "Reportes Financieros", "icon": "account_balance", "path": "/reports/financial" }
+    ]
+  },
+  {
+    "id": "settings",
+    "label": "Configuración",
+    "icon": "settings",
+    "children": [
+      { "id": "company-settings", "label": "Configuración de Empresa", "icon": "business", "path": "/settings/company" },
+      { "id": "user-settings", "label": "Configuración de Usuario", "icon": "person", "path": "/settings/user" },
+      { "id": "system-settings", "label": "Configuración del Sistema", "icon": "admin_panel_settings", "path": "/settings/system" }
     ]
   }
 ]

@@ -1,6 +1,5 @@
 import React from "react";
 import { Route, Routes} from "react-router-dom";
-import { PrivateRoutes } from "../../models/routes";
 import Reservations from "../../components/sidebar/sections/reservations/Reservations";
 
 
