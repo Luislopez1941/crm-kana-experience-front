@@ -18,6 +18,13 @@ const APIs = {
     return ConfigurationAPIs.get(path);
   },
 
+
+  getYachtByYachtCategory: async (yachtCategoryId: any, page: number = 1) => {
+    const path = `yachts/by-category`;
+    return ConfigurationAPIs.post(path, { yachtCategoryId: yachtCategoryId, page });
+  },
+
+
   updateYacht: async (id: number, data: any, customPath?: string) => {
     const path = customPath || `yachts/update/${id}`;
     return ConfigurationAPIs.patch(path, data);
@@ -30,42 +37,47 @@ const APIs = {
 
   // Yacht Types
 
-  createYachtType: async (data: any, customPath?: string) => {
-    const path = customPath || 'yacht-types/create';
-    return ConfigurationAPIs.post(path, data);
-  },
-
   getAllYachtType: async (customPath?: string) => {
-    const path = customPath || 'yacht-types/get-all';
+    const path = customPath || 'yacht-categories/get-all';
     return ConfigurationAPIs.get(path);
   },
 
-  updateYachtType: async (id: number, data: any, customPath?: string) => {
-    const path = customPath || `yacht-types/update/${id}`;
+  createYachtCategory: async (data: any, customPath?: string) => {
+    const path = customPath || 'yacht-categories/create';
+    return ConfigurationAPIs.post(path, data);
+  },
+
+  getAllYachtCategories: async (customPath?: string) => {
+    const path = customPath || 'yacht-categories/get-all';
+    return ConfigurationAPIs.get(path);
+  },
+
+  updateYachtCategory: async (id: number, data: any, customPath?: string) => {
+    const path = customPath || `yacht-categories/update/${id}`;
     return ConfigurationAPIs.patch(path, data);
   },
 
-  deleteYachtType: async (id: number, customPath?: string) => {
-    const path = customPath || `yacht-types/delete/${id}`;
+  deleteYachtCategory: async (id: number, customPath?: string) => {
+    const path = customPath || `yacht-categories/delete/${id}`;
     return ConfigurationAPIs.delete(path);
   },
 
 
-    // Tours
-    createTour: async (data: any, customPath?: string) => {
-      const path = customPath || 'tours/create';
-      return ConfigurationAPIs.post(path, data);
-    },
-  
-    getAllTours: async (customPath?: string) => {
-      const path = customPath || 'tours/get-all';
-      return ConfigurationAPIs.get(path);
-    },
-  
-    updateTour: async (id: number, data: any, customPath?: string) => {
-      const path = customPath || `tours/update/${id}`;
-      return ConfigurationAPIs.patch(path, data);
-    },
+  // Tours
+  createTour: async (data: any, customPath?: string) => {
+    const path = customPath || 'tours/create';
+    return ConfigurationAPIs.post(path, data);
+  },
+
+  getAllTours: async (customPath?: string) => {
+    const path = customPath || 'tours/get-all';
+    return ConfigurationAPIs.get(path);
+  },
+
+  updateTour: async (id: number, data: any, customPath?: string) => {
+    const path = customPath || `tours/update/${id}`;
+    return ConfigurationAPIs.patch(path, data);
+  },
 
   // Tour Types - Tour Type Management
 
@@ -139,13 +151,13 @@ const APIs = {
 
   // Municipalities
   getMunicipalitiesByState: async (stateId: number, customPath?: string) => {
-    const path = customPath || `municipalities/get-by-state/${stateId}`;
+    const path = customPath || `municipalities/by-state/${stateId}`;
     return ConfigurationAPIs.get(path);
   },
 
   // Localities
   getLocalitiesByMunicipality: async (municipalityId: number, customPath?: string) => {
-    const path = customPath || `localities/get-by-municipality/${municipalityId}`;
+    const path = customPath || `localities/by-municipality/${municipalityId}`;
     return ConfigurationAPIs.get(path);
   },
 

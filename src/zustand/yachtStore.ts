@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 
+interface PricingPackage {
+  hora: number;
+  precio: number;
+}
+
 export interface Yacht {
   id: number;
   name: string;
@@ -8,10 +13,11 @@ export interface Yacht {
   location: string;
   images: string[];
   description: string;
-  characteristics: string[];
-  pricePerDay: number;
-  yachtTypeId: number;
-  yachtType?: {
+  features: string;
+  pricing: PricingPackage[];
+  status: string;
+  yachtCategoryId: number;
+  yachtCategory?: {
     id: number;
     name: string;
   };
@@ -83,7 +89,7 @@ export const useYachtStore = create<YachtStore>((set, get) => ({
       return searchTerm === '' || 
         yacht.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         yacht.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (yacht.yachtType?.name && yacht.yachtType.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        (yacht.yachtCategory?.name && yacht.yachtCategory.name.toLowerCase().includes(searchTerm.toLowerCase()));
     });
   }
 })); 

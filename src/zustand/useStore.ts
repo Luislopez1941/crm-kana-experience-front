@@ -43,7 +43,8 @@ interface AppState {
 
 export const useStore = create<AppState>((set, get) => ({
   // Authentication
-  url: 'https://jllc-back.com/kana-experience',
+  // url: 'https://jllc-back.com/kana-experience',
+  url: 'http://localhost:3005',
   isAuthenticated: localStorage.getItem('yachtcrm_auth') === 'true',
   user: JSON.parse(localStorage.getItem('yachtcrm_user') || 'null'),
   login: (user: User) => {

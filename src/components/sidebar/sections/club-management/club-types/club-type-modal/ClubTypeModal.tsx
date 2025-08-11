@@ -3,35 +3,36 @@ import { usePopupStore } from '../../../../../../zustand/popupStore';
 import APIs from '../../../../../../services/services/APIs';
 import './styles/ClubTypeModal.css';
 
-interface ClubTypeModalProps {
+interface CreateClubTypeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  editingType?: any;
+  editingClubType?: any;
 }
 
 interface ClubTypeForm {
   name: string;
 }
 
-const ClubTypeModal: React.FC<ClubTypeModalProps> = ({ isOpen, onClose, onSuccess, editingType }) => {
+const ClubTypeModal: React.FC<CreateClubTypeModalProps> = ({ isOpen, onClose, onSuccess, editingClubType }) => {
   const { showSuccess, showError } = usePopupStore();
   const [isLoading, setIsLoading] = useState(false);
+  
   const [formData, setFormData] = useState<ClubTypeForm>({
     name: ''
   });
 
   useEffect(() => {
-    if (editingType) {
+    if (editingClubType) {
       setFormData({
-        name: editingType.name || ''
+        name: editingClubType.name || ''
       });
     } else {
       setFormData({
         name: ''
       });
     }
-  }, [editingType]);
+  }, [editingClubType]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -43,27 +44,26 @@ const ClubTypeModal: React.FC<ClubTypeModalProps> = ({ isOpen, onClose, onSucces
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      showError('Por favor ingresa el nombre del tipo de club');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      if (!formData.name.trim()) {
-        showError('El nombre del tipo de club es requerido');
-        return;
-      }
-
-      if (editingType) {
+      if (editingClubType) {
         // Update existing club type
-        const response: any = await APIs.updateClubType(editingType.id, formData);
+        const response: any = await APIs.updateClubType(editingClubType.id, formData);
         showSuccess(response.message || 'Tipo de club actualizado exitosamente');
-        onSuccess();
-        handleClose();
       } else {
         // Create new club type
         const response: any = await APIs.createClubType(formData);
         showSuccess(response.message || 'Tipo de club creado exitosamente');
-        onSuccess();
-        handleClose();
       }
+      onSuccess();
+      handleClose();
     } catch (error: any) {
       console.error('Error saving club type:', error);
       
@@ -80,8 +80,9 @@ const ClubTypeModal: React.FC<ClubTypeModalProps> = ({ isOpen, onClose, onSucces
   };
 
   const handleClose = () => {
-    setFormData({ name: '' });
-    setIsLoading(false);
+    setFormData({
+      name: ''
+    });
     onClose();
   };
 
@@ -90,12 +91,12 @@ const ClubTypeModal: React.FC<ClubTypeModalProps> = ({ isOpen, onClose, onSucces
   return (
     <div className="club-type-modal">
       <div className="modal-overlay" onClick={handleClose}>
-        <div className="club-type-modal-container" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-container" onClick={(e) => e.stopPropagation()}>
           {/* Modal Header */}
           <div className="modal-header">
             <div className="modal-title">
               <span className="material-icons">category</span>
-              <h2>{editingType ? 'Editar Tipo de Club' : 'Nuevo Tipo de Club'}</h2>
+              <h2>{editingClubType ? 'Editar Categoría de Club' : 'Nueva Categoría de Club'}</h2>
             </div>
             <button className="close-btn" onClick={handleClose}>
               <span className="material-icons">close</span>
@@ -106,14 +107,14 @@ const ClubTypeModal: React.FC<ClubTypeModalProps> = ({ isOpen, onClose, onSucces
           <div className="modal-content">
             <form className="club-type-form" onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="name">Nombre del Tipo *</label>
+                <label htmlFor="name">Nombre de la Categoría *</label>
                 <input
                   type="text"
                   id="name"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  placeholder="Ej: Nocturno, Playa, VIP"
+                  placeholder="Ej: Club Nocturno, Bar Lounge, etc."
                   required
                   disabled={isLoading}
                 />
@@ -137,12 +138,12 @@ const ClubTypeModal: React.FC<ClubTypeModalProps> = ({ isOpen, onClose, onSucces
                   {isLoading ? (
                     <>
                       <span className="loading-spinner"></span>
-                      {editingType ? 'Actualizando...' : 'Creando...'}
+                      {editingClubType ? 'Actualizando...' : 'Creando...'}
                     </>
                   ) : (
                     <>
                       <span className="material-icons">save</span>
-                      {editingType ? 'Actualizar Tipo' : 'Crear Tipo'}
+                      {editingClubType ? 'Actualizar Categoría' : 'Crear Categoría'}
                     </>
                   )}
                 </button>

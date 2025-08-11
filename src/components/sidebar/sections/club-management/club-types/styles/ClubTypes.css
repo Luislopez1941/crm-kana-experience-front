@@ -1,511 +1,267 @@
 /* Club Types Page Styles */
-.club-types-page {
-  padding: 2rem;
-  background: var(--background);
-  min-height: 100vh;
+.club-types-container {
+  padding: var(--spacing-xl);
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-/* Page Header */
-.club-types-page .page-header {
+.club-types-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 2rem;
-  gap: 1rem;
+  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-lg);
 }
 
-.club-types-page .header-content {
-  flex: 1;
+.club-types-header .header-content h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
-.club-types-page .page-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
-}
-
-.club-types-page .page-title .material-icons.xl {
-  font-size: 2.5rem;
-  color: var(--primary);
-}
-
-.club-types-page .page-subtitle {
+.club-types-header .header-content p {
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   margin: 0;
 }
 
-.club-types-page .create-btn {
+.club-types-header .create-btn {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 0.5rem;
-  transition: all 0.3s ease;
-  white-space: nowrap;
+  gap: var(--spacing-xs);
+  transition: all 0.2s ease;
+  font-size: var(--font-size-base);
 }
 
-/* Stats Section */
-.club-types-page .stats-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+.club-types-header .create-btn:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
 }
 
-.club-types-page .stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  transition: all 0.3s ease;
+.club-types-header .create-btn:disabled {
+  background-color: var(--text-secondary);
+  cursor: not-allowed;
+  transform: none;
 }
 
-.club-types-page .stat-card:hover {
-  box-shadow: var(--shadow);
-  transform: translateY(-2px);
+.club-types-content {
+  min-height: 400px;
 }
 
-.club-types-page .stat-icon {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 0.75rem;
-  background: var(--primary-alpha);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.club-types-page .stat-icon .material-icons {
-  font-size: 1.5rem;
-  color: var(--primary);
-}
-
-.club-types-page .stat-content {
-  flex: 1;
-}
-
-.club-types-page .stat-number {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1;
-  margin-bottom: 0.25rem;
-}
-
-.club-types-page .stat-label {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-/* Club Types Section */
-.club-types-page .club-types-section {
-  background: var(--surface);
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: var(--shadow);
-}
-
-.club-types-page .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  gap: 1rem;
-}
-
-.club-types-page .section-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.club-types-page .section-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.club-types-page .search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.club-types-page .search-box .material-icons {
-  position: absolute;
-  left: 1rem;
-  color: var(--text-secondary);
-  font-size: 1.25rem;
-}
-
-.club-types-page .search-input {
-  padding: 0.75rem 1rem 0.75rem 3rem;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  background: var(--background);
-  color: var(--text-primary);
-  font-size: 1rem;
-  min-width: 300px;
-  transition: all 0.3s ease;
-}
-
-.club-types-page .search-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-alpha);
-}
-
-/* Loading State */
-.club-types-page .loading-state {
+.loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
+  padding: var(--spacing-2xl);
+  gap: var(--spacing-md);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-container p {
   color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  margin: 0;
 }
 
-.club-types-page .loading-state .material-icons {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Empty State */
-.club-types-page .empty-state {
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: var(--spacing-2xl);
   text-align: center;
-  color: var(--text-secondary);
+  gap: var(--spacing-lg);
 }
 
-.club-types-page .empty-state .material-icons {
+.empty-state .material-icons {
   font-size: 4rem;
-  margin-bottom: 1rem;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
+  opacity: 0.5;
 }
 
-.club-types-page .empty-state h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
+.empty-state h3 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  margin: 0;
 }
 
-.club-types-page .empty-state p {
-  font-size: 1rem;
-  margin: 0 0 2rem 0;
+.empty-state p {
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  margin: 0;
   max-width: 400px;
 }
 
-/* Desktop Grid View */
-.club-types-page .club-types-grid-desktop {
-  display: grid;
-  grid-template-columns: 2fr 3fr 1fr 1fr 1fr;
-  gap: 0;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-.club-types-page .grid-header {
-  display: contents;
-}
-
-.club-types-page .grid-header .grid-cell {
-  background: var(--surface-variant);
-  color: var(--text-primary);
-  font-weight: 600;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.club-types-page .grid-row {
-  display: contents;
-}
-
-.club-types-page .grid-row:hover {
-  background: var(--hover);
-}
-
-.club-types-page .grid-cell {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  font-size: 0.875rem;
-  color: var(--text-primary);
-}
-
-.club-types-page .club-type-cell {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-}
-
-.club-types-page .club-type-info {
-  width: 100%;
-}
-
-.club-types-page .club-type-name {
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.25rem;
-}
-
-.club-types-page .actions-cell {
-  gap: 0.5rem;
-  justify-content: flex-start;
-}
-
-.club-types-page .btn-icon {
-  padding: 0.5rem;
-  border-radius: 0.375rem;
+.empty-state .create-first-btn {
+  background-color: var(--primary);
+  color: white;
   border: none;
-  background: transparent;
-  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: var(--spacing-xs);
+  transition: all 0.2s ease;
+  font-size: var(--font-size-base);
 }
 
-.club-types-page .btn-icon:hover {
-  background: var(--hover);
-  color: var(--text-primary);
+.empty-state .create-first-btn:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
 }
 
-.club-types-page .edit-btn:hover {
-  color: var(--primary);
-}
-
-.club-types-page .delete-btn:hover {
-  color: var(--error);
-}
-
-.club-types-page .status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.club-types-page .status-badge.active {
-  background: var(--success-alpha);
-  color: var(--success);
-}
-
-.club-types-page .status-badge.inactive {
-  background: var(--text-tertiary-alpha);
-  color: var(--text-tertiary);
-}
-
-/* Mobile Cards View */
-.club-types-page .club-types-cards {
+.club-types-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
 }
 
-.club-types-page .club-type-card {
-  background: var(--surface);
+.club-type-card {
+  background-color: var(--background);
   border: 1px solid var(--border);
-  border-radius: 1rem;
-  overflow: hidden;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.club-types-page .club-type-card:hover {
-  box-shadow: var(--shadow-lg);
+.club-type-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
-.club-types-page .card-header {
+.club-type-card .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
 }
 
-.club-types-page .club-type-title {
+.club-type-card .club-type-info {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--spacing-sm);
 }
 
-.club-types-page .club-type-title h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.club-types-page .club-type-title .material-icons {
+.club-type-card .club-type-info .material-icons {
   color: var(--primary);
   font-size: 1.5rem;
 }
 
-.club-types-page .card-actions {
+.club-type-card .club-type-info h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  margin: 0;
+}
+
+.club-type-card .card-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-xs);
 }
 
-.club-types-page .card-content {
-  padding: 1.5rem;
-}
-
-.club-types-page .club-type-description {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  margin: 0 0 1rem 0;
-}
-
-.club-types-page .club-type-details {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.club-types-page .detail {
+.club-type-card .edit-btn,
+.club-type-card .delete-btn {
+  background: none;
+  border: none;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
+  justify-content: center;
+  transition: all 0.2s ease;
   color: var(--text-secondary);
 }
 
-.club-types-page .detail .material-icons.sm {
-  font-size: 1rem;
-  color: var(--text-tertiary);
+.club-type-card .edit-btn:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
 }
 
-.club-types-page .status-info {
+.club-type-card .delete-btn:hover {
+  background-color: var(--danger-light);
+  color: var(--danger);
+}
+
+.club-type-card .card-content {
+  margin-top: var(--spacing-md);
+}
+
+.club-type-card .club-type-details {
   display: flex;
-  justify-content: flex-start;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.club-type-card .club-type-details p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.club-type-card .club-type-details strong {
+  color: var(--text);
+  font-weight: var(--font-weight-medium);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Responsive Design */
-.club-types-page .desktop-only {
-  display: block;
-}
-
-.club-types-page .mobile-only {
-  display: none;
-}
-
-@media (max-width: 1024px) {
-  .club-types-page .club-types-grid-desktop {
-    grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
-  }
-}
-
 @media (max-width: 768px) {
-  .club-types-page {
-    padding: 1rem;
+  .club-types-container {
+    padding: var(--spacing-lg);
   }
-  
-  .club-types-page .page-header {
+
+  .club-types-header {
     flex-direction: column;
     align-items: stretch;
-    gap: 1rem;
+    gap: var(--spacing-md);
   }
-  
-  .club-types-page .create-btn {
+
+  .club-types-header .create-btn {
     align-self: flex-start;
   }
-  
-  .club-types-page .section-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-  
-  .club-types-page .section-actions {
-    justify-content: stretch;
-  }
-  
-  .club-types-page .search-input {
-    min-width: auto;
-    width: 100%;
-  }
-  
-  .club-types-page .club-types-grid-desktop {
-    display: none;
-  }
-  
-  .club-types-page .mobile-only {
-    display: grid;
-  }
-  
-  .club-types-page .desktop-only {
-    display: none;
-  }
-  
-  .club-types-page .club-types-cards {
-    grid-template-columns: 1fr;
-  }
-  
-  .club-types-page .club-type-details {
-    grid-template-columns: 1fr;
-  }
-  
-  .club-types-page .stats-section {
+
+  .club-types-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
-  .club-types-page {
-    padding: 0.5rem;
+  .club-types-container {
+    padding: var(--spacing-md);
   }
-  
-  .club-types-page .club-types-section {
-    padding: 1rem;
+
+  .club-types-header .header-content h1 {
+    font-size: var(--font-size-xl);
   }
-  
-  .club-types-page .page-title {
-    font-size: 1.5rem;
-  }
-  
-  .club-types-page .page-title .material-icons.xl {
-    font-size: 2rem;
-  }
-  
-  .club-types-page .section-title {
-    font-size: 1.25rem;
+
+  .club-type-card {
+    padding: var(--spacing-md);
   }
 } 

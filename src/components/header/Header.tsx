@@ -7,24 +7,6 @@ const Header: React.FC = () => {
   const { toggleSidebar, theme, toggleTheme, logout } = useStore();
   const { user } = useUserStore();
 
-  const getCurrentDateTime = () => {
-    const now = new Date();
-    return {
-      date: now.toLocaleDateString('es-ES', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      }),
-      time: now.toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      })
-    };
-  };
-
-  const { date, time } = getCurrentDateTime();
-
   return (
     <header className="header">
       <div className="header-left">
@@ -34,13 +16,6 @@ const Header: React.FC = () => {
         >
           <span className="material-icons">menu</span>
         </button>
-        
-        <div className="header-breadcrumb">
-          <div className="breadcrumb-item">
-            <span className="material-icons">home</span>
-            <span>YachtCRM</span>
-          </div>
-        </div>
       </div>
 
       <div className="header-center">
@@ -51,16 +26,10 @@ const Header: React.FC = () => {
             placeholder="Buscar clientes, yates, reservas..." 
             className="search-input"
           />
-          <kbd className="search-shortcut">Ctrl+K</kbd>
         </div>
       </div>
 
       <div className="header-right">
-        <div className="header-datetime">
-          <div className="current-time">{time}</div>
-          <div className="current-date">{date}</div>
-        </div>
-
         <div className="header-actions">
           <button className="header-action-btn">
             <span className="material-icons">notifications</span>

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import ClubModal from './club-modal/ClubModal';
+import { useNavigate } from 'react-router-dom';
+import { usePopupStore } from '../../../../../zustand/popupStore';
 import APIs from '../../../../../services/services/APIs';
+import ClubModal from './club-modal/ClubModal';
+
 import './styles/ClubManagement.css';
 
 interface Club {
@@ -14,8 +17,6 @@ interface Club {
   type: {
     id: number;
     name: string;
-    createdAt: string;
-    updatedAt: string;
   };
   stateId: number;
   state: {
@@ -32,24 +33,47 @@ interface Club {
     id: number;
     name: string;
   };
+  images: Array<{
+    id: number;
+    url: string;
+    clubId: number;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ClubType {
+  id: number;
+  name: string;
   createdAt: string;
   updatedAt: string;
 }
 
 const ClubManagement: React.FC = () => {
+  const navigate = useNavigate();
+  const { showSuccess, showError } = usePopupStore();
 
   const [clubs, setClubs] = useState<Club[]>([]);
+  const [clubTypes, setClubTypes] = useState<ClubType[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState<string>('');
+  const [filteredClubs, setFilteredClubs] = useState<Club[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editingClub, setEditingClub] = useState<Club | null>(null);
 
-  // const formatPrice = (price: number) => {
-  //   return new Intl.NumberFormat('es-MX', {
-  //     style: 'currency',
-  //     currency: 'MXN'
-  //   }).format(price);
-  // };
+  const fetchClubTypes = async () => {
+    try {
+      const response: any = await APIs.getAllClubTypes();
+      if (response?.data) {
+        setClubTypes(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching club types:', error);
+    }
+  };
 
   const fetchClubs = async () => {
     setIsLoading(true);
@@ -57,6 +81,7 @@ const ClubManagement: React.FC = () => {
       const response: any = await APIs.getAllClubs();
       if (response.data) {
         setClubs(response.data);
+        setFilteredClubs(response.data);
       }
     } catch (error) {
       console.error('Error fetching clubs:', error);
@@ -65,9 +90,71 @@ const ClubManagement: React.FC = () => {
     }
   };
 
+  const fetchClubsByType = async (typeId: number) => {
+    setIsLoading(true);
+    try {
+      // TODO: Implement API call to get clubs by type
+      const response: any = await APIs.getAllClubs();
+      if (response?.data) {
+        const filtered = response.data.filter((club: Club) => club.typeId === typeId);
+        setFilteredClubs(filtered);
+      }
+    } catch (error) {
+      console.error('Error fetching clubs by type:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTypeChange = (typeId: string) => {
+    setSelectedType(typeId);
+    
+    if (typeId === '') {
+      // Si no hay tipo seleccionado, mostrar todos los clubs
+      setFilteredClubs(clubs);
+    } else {
+      // Filtrar por tipo seleccionado
+      fetchClubsByType(Number(typeId));
+    }
+  };
+
+  const reloadFilteredData = () => {
+    if (selectedType === '') {
+      fetchClubs();
+    } else {
+      fetchClubsByType(Number(selectedType));
+    }
+  };
+
+  // Función para filtrar clubs por search term y tipo
+  const getFilteredClubs = () => {
+    let filtered = clubs;
+    
+    // Filtrar por tipo si hay uno seleccionado
+    if (selectedType !== '') {
+      filtered = filtered.filter(club => club.typeId === Number(selectedType));
+    }
+    
+    // Filtrar por search term
+    if (searchTerm.trim() !== '') {
+      filtered = filtered.filter(club =>
+        club.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        club.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        club.type.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  };
+
   useEffect(() => {
     fetchClubs();
+    fetchClubTypes();
   }, []);
+
+  useEffect(() => {
+    setFilteredClubs(getFilteredClubs());
+  }, [clubs, selectedType, searchTerm]);
 
   const handleEdit = (club: Club) => {
     setEditingClub(club);
@@ -77,11 +164,12 @@ const ClubManagement: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este club?')) {
       try {
-        // TODO: Implement delete API call
-        console.log('Delete club:', id);
+        await APIs.deleteClub(id);
+        showSuccess('Club eliminado exitosamente');
         await fetchClubs();
       } catch (error) {
         console.error('Error deleting club:', error);
+        showError('Error al eliminar el club');
       }
     }
   };
@@ -91,27 +179,21 @@ const ClubManagement: React.FC = () => {
     setEditingClub(null);
   };
 
-  const filteredClubs = clubs.filter(club =>
-    club.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (club.address && club.address.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (club.type && club.type.name.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
   return (
     <div className="club-management-page">
       {/* Page Header */}
-      <div className="page-header">
-        <div className="header-content">
-          <h1 className="page-title">
+      <div className="club-management-page__page-header">
+        <div className="club-management-page__header-content">
+          <h1 className="club-management-page__page-title">
             <span className="material-icons xl">nightlife</span>
             Gestión de Clubs
           </h1>
-          <p className="page-subtitle">
-            Administra tus clubs, eventos y experiencias nocturnas
+          <p className="club-management-page__page-subtitle">
+            Administra tus clubs, antros y lugares de entretenimiento
           </p>
         </div>
         <button
-          className="btn btn-primary create-btn"
+          className="club-management-page__new-club-btn"
           onClick={() => setIsModalOpen(true)}
         >
           <span className="material-icons">add_circle</span>
@@ -120,19 +202,29 @@ const ClubManagement: React.FC = () => {
       </div>
 
       {/* Clubs Section */}
-      <div className="clubs-section">
-        <div className="section-header">
-          <h2 className="section-title">
-            <span className="material-icons">list</span>
-            Clubs Disponibles
-          </h2>
-          <div className="section-actions">
-            <div className="search-box">
+      <div className="club-management-page__clubs-section">
+        <div className="club-management-page__section-header">
+          <div className="club-management-page__section-actions">
+            <div className="club-management-page__type-filter">
+              <select
+                className="club-management-page__type-select"
+                value={selectedType}
+                onChange={(e) => handleTypeChange(e.target.value)}
+              >
+                <option value="">Todos los tipos</option>
+                {clubTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="club-management-page__search-box">
               <span className="material-icons">search</span>
               <input
                 type="text"
                 placeholder="Buscar clubs..."
-                className="search-input"
+                className="club-management-page__search-input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -141,63 +233,97 @@ const ClubManagement: React.FC = () => {
         </div>
 
         {isLoading ? (
-          <div className="loading-state">
-            <span className="material-icons">hourglass_empty</span>
+          <div className="club-management-page__loading-state">
+            <div className="club-management-page__loading-spinner"></div>
             <p>Cargando clubs...</p>
           </div>
         ) : filteredClubs.length === 0 ? (
-          <div className="empty-state">
+          <div className="club-management-page__empty-state">
             <span className="material-icons">nightlife_off</span>
             <h3>No hay clubs registrados</h3>
-            <p>Crea tu primer club para comenzar a ofrecer experiencias nocturnas</p>
-            <button
-              className="btn btn-primary"
-              onClick={() => setIsModalOpen(true)}
-            >
-              <span className="material-icons">add_circle</span>
-              Crear Primer Club
-            </button>
+            <p>Crea tu primer club para comenzar a gestionar el entretenimiento</p>
           </div>
         ) : (
           <>
             {/* Desktop Grid View */}
-            <div className="clubs-grid-desktop desktop-only">
-              <div className="grid-header">
-                <div className="grid-cell">Club</div>
-                <div className="grid-cell">Tipo</div>
-                <div className="grid-cell">Dirección</div>
-                <div className="grid-cell">Teléfono</div>
-                <div className="grid-cell">Localidad</div>
-                <div className="grid-cell">Estado</div>
-                <div className="grid-cell">Acciones</div>
+            <div className="club-management-page__clubs-grid-desktop club-management-page__desktop-only">
+              {/* Table Header */}
+              <div className="club-management-page__grid-header">
+                <div className="club-management-page__grid-cell">Club</div>
+                <div className="club-management-page__grid-cell">Tipo</div>
+                <div className="club-management-page__grid-cell">Ubicación</div>
+                <div className="club-management-page__grid-cell">Contacto</div>
+                <div className="club-management-page__grid-cell">Estado</div>
+                <div className="club-management-page__grid-cell">Acciones</div>
               </div>
+
+              {/* Rows */}
               {filteredClubs.map((club) => (
-                <div key={club.id} className="grid-row">
-                  <div className="grid-cell club-cell">
-                    <div className="club-info">
-                      <div className="club-name">{club.name}</div>
-                      <div className="club-description">{club.description || 'Sin descripción'}</div>
+                <div key={club.id} className="club-management-page__grid-row">
+                  <div className="club-management-page__grid-cell club-management-page__club-cell">
+                    <div className="club-management-page__club-info-grid">
+                      <div className="club-management-page__club-thumbnail">
+                        {club.images && club.images.length > 0 ? (
+                          <img 
+                            src={club.images[0].url} 
+                            alt={club.name}
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.style.display = 'none';
+                              const icon = target.nextElementSibling as HTMLElement;
+                              if (icon) icon.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <span 
+                          className="material-icons" 
+                          style={{ display: club.images && club.images.length > 0 ? 'none' : 'flex' }}
+                        >
+                          nightlife
+                        </span>
+                      </div>
+                      <div>
+                        <div className="club-management-page__club-name">{club.name}</div>
+                        <div className="club-management-page__club-details">{club.address}</div>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid-cell">{club.type?.name || 'Sin tipo'}</div>
-                  <div className="grid-cell">{club.address || 'Sin dirección'}</div>
-                  <div className="grid-cell">{club.phone || 'Sin teléfono'}</div>
-                  <div className="grid-cell">{club.locality?.name || 'Sin localidad'}</div>
-                  <div className="grid-cell">
-                    <span className="status-badge active">Activo</span>
+                  <div className="club-management-page__grid-cell club-management-page__type-cell">
+                    {club.type.name}
                   </div>
-                  <div className="grid-cell actions-cell">
+                  <div className="club-management-page__grid-cell club-management-page__location-cell">
+                    <span className="material-icons sm">location_on</span>
+                    {club.locality.name}, {club.municipality.name}
+                  </div>
+                  <div className="club-management-page__grid-cell club-management-page__contact-cell">
+                    <span className="material-icons sm">phone</span>
+                    {club.phone || 'N/A'}
+                  </div>
+                  <div className="club-management-page__grid-cell">
+                    <span className="club-management-page__availability-badge available">
+                      <span className="material-icons sm">check_circle</span>
+                      Activo
+                    </span>
+                  </div>
+                  <div className="club-management-page__grid-cell club-management-page__actions-cell">
                     <button
-                      className="btn btn-icon edit-btn"
+                      className="club-management-page__action-btn"
+                      title="Ver detalles"
+                      onClick={() => navigate(`/clubs/detalle/${club.id}`)}
+                    >
+                      <span className="material-icons">visibility</span>
+                    </button>
+                    <button
+                      className="club-management-page__action-btn"
+                      title="Editar"
                       onClick={() => handleEdit(club)}
-                      title="Editar club"
                     >
                       <span className="material-icons">edit</span>
                     </button>
                     <button
-                      className="btn btn-icon delete-btn"
+                      className="club-management-page__action-btn danger"
+                      title="Eliminar"
                       onClick={() => handleDelete(club.id)}
-                      title="Eliminar club"
                     >
                       <span className="material-icons">delete</span>
                     </button>
@@ -207,60 +333,82 @@ const ClubManagement: React.FC = () => {
             </div>
 
             {/* Mobile Cards View */}
-            <div className="clubs-cards mobile-only">
+            <div className="club-management-page__clubs-grid club-management-page__mobile-only">
               {filteredClubs.map((club) => (
-                <div key={club.id} className="club-card">
-                  <div className="card-header">
-                    <div className="club-title">
+                <div key={club.id} className="club-management-page__club-card">
+                  <div className="club-management-page__card-image">
+                    {club.images && club.images.length > 0 ? (
+                      <img 
+                        src={club.images[0].url} 
+                        alt={club.name}
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.style.display = 'none';
+                          const placeholder = target.nextElementSibling as HTMLElement;
+                          if (placeholder) placeholder.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      className="club-management-page__club-image-placeholder"
+                      style={{ display: club.images && club.images.length > 0 ? 'none' : 'flex' }}
+                    >
                       <span className="material-icons">nightlife</span>
-                      <h3>{club.name}</h3>
                     </div>
-                    <div className="card-actions">
-                      <button
-                        className="btn btn-icon edit-btn"
-                        onClick={() => handleEdit(club)}
-                      >
-                        <span className="material-icons">edit</span>
-                      </button>
-                      <button
-                        className="btn btn-icon delete-btn"
-                        onClick={() => handleDelete(club.id)}
-                      >
-                        <span className="material-icons">delete</span>
-                      </button>
+                    <div className="club-management-page__availability-overlay available">
+                      <span className="material-icons">check_circle</span>
+                      <span>Activo</span>
                     </div>
                   </div>
-                  
-                  <div className="card-content">
-                    <p className="club-description">{club.description || 'Sin descripción'}</p>
-                    
-                    <div className="club-details">
-                      <div className="detail">
-                        <span className="material-icons sm">category</span>
-                        <span>{club.type?.name || 'Sin tipo'}</span>
+
+                  <div className="club-management-page__card-content">
+                    <div className="club-management-page__card-header">
+                      <h3 className="club-management-page__club-name">{club.name}</h3>
+                      <span className="club-management-page__club-type">
+                        {club.type.name}
+                      </span>
+                    </div>
+
+                    <div className="club-management-page__club-specs">
+                      <div className="club-management-page__spec">
+                        <span className="material-icons sm">location_on</span>
+                        <span>{club.address}</span>
                       </div>
-                      <div className="detail">
+                      <div className="club-management-page__spec">
+                        <span className="material-icons sm">map</span>
+                        <span>{club.locality.name}, {club.municipality.name}</span>
+                      </div>
+                      <div className="club-management-page__spec">
                         <span className="material-icons sm">phone</span>
                         <span>{club.phone || 'Sin teléfono'}</span>
-                      </div>
-                      <div className="detail">
-                        <span className="material-icons sm">location_on</span>
-                        <span>{club.address || 'Sin dirección'}</span>
-                      </div>
-                      <div className="detail">
-                        <span className="material-icons sm">place</span>
-                        <span>{club.locality?.name || 'Sin localidad'}</span>
                       </div>
                     </div>
 
                     {club.website && (
-                      <div className="website-info">
+                      <div className="club-management-page__website-info">
                         <span className="material-icons sm">language</span>
                         <a href={club.website} target="_blank" rel="noopener noreferrer">
                           {club.website}
                         </a>
                       </div>
                     )}
+
+                    <div className="club-management-page__card-actions">
+                      <button
+                        className="club-management-page__btn club-management-page__btn-secondary club-management-page__btn-sm"
+                        onClick={() => navigate(`/clubs/detalle/${club.id}`)}
+                      >
+                        <span className="material-icons sm">visibility</span>
+                        Ver Detalles
+                      </button>
+                      <button
+                        className="club-management-page__btn club-management-page__btn-primary club-management-page__btn-sm"
+                        onClick={() => handleEdit(club)}
+                      >
+                        <span className="material-icons sm">edit</span>
+                        Editar
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

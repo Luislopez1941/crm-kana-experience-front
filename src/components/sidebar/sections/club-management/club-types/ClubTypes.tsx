@@ -1,22 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import ClubTypeModal from './club-type-modal/ClubTypeModal';
+import { usePopupStore } from '../../../../../zustand/popupStore';
 import APIs from '../../../../../services/services/APIs';
+import ClubTypeModal from './club-type-modal/ClubTypeModal';
 import './styles/ClubTypes.css';
 
-interface ClubType {
-  id: number;
-  name: string;
-  clubs: any[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 const ClubTypes: React.FC = () => {
-  const [clubTypes, setClubTypes] = useState<ClubType[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [clubTypes, setClubTypes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [editingType, setEditingType] = useState<ClubType | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingClubType, setEditingClubType] = useState<any>(null);
+  const { showSuccess, showError } = usePopupStore();
 
   const fetchClubTypes = async () => {
     setIsLoading(true);
@@ -36,8 +29,13 @@ const ClubTypes: React.FC = () => {
     fetchClubTypes();
   }, []);
 
-  const handleEdit = (clubType: ClubType) => {
-    setEditingType(clubType);
+  const handleCreate = () => {
+    setEditingClubType(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (clubType: any) => {
+    setEditingClubType(clubType);
     setIsModalOpen(true);
   };
 
@@ -45,217 +43,108 @@ const ClubTypes: React.FC = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este tipo de club?')) {
       try {
         await APIs.deleteClubType(id);
-        await fetchClubTypes();
-      } catch (error) {
+        showSuccess('Tipo de club eliminado exitosamente');
+        fetchClubTypes();
+      } catch (error: any) {
         console.error('Error deleting club type:', error);
+        if (error.response?.data?.message) {
+          showError(error.response.data.message);
+        } else {
+          showError('Error al eliminar el tipo de club');
+        }
       }
     }
   };
 
-  const handleCloseModal = () => {
+  const handleModalSuccess = () => {
     setIsModalOpen(false);
-    setEditingType(null);
+    setEditingClubType(null);
+    fetchClubTypes();
   };
 
-  const filteredClubTypes = clubTypes.filter(clubType =>
-    clubType.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
-    <div className="club-types-page">
-      {/* Page Header */}
-      <div className="page-header">
+    <div className="club-types-container">
+      <div className="club-types-header">
         <div className="header-content">
-          <h1 className="page-title">
-            <span className="material-icons xl">category</span>
-            Tipos de Club
-          </h1>
-          <p className="page-subtitle">
-            Administra las categorías y tipos de clubs disponibles
-          </p>
+          <h1>Categorías de Club</h1>
+          <p>Gestiona los diferentes tipos de club disponibles en el sistema</p>
         </div>
-        <button
-          className="btn btn-primary create-btn"
-          onClick={() => setIsModalOpen(true)}
+        <button 
+          className="create-btn"
+          onClick={handleCreate}
+          disabled={isLoading}
         >
-          <span className="material-icons">add_circle</span>
-          Nuevo Tipo de Club
+          <span className="material-icons">add</span>
+          Nueva Categoría
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="stats-section">
-        <div className="stat-card">
-          <div className="stat-icon">
-            <span className="material-icons">category</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-number">{clubTypes.length}</div>
-            <div className="stat-label">Tipos de Club</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">
-            <span className="material-icons">nightlife</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-number">{clubTypes.reduce((acc, type) => acc + type.clubs.length, 0)}</div>
-            <div className="stat-label">Clubs Totales</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">
-            <span className="material-icons">trending_up</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-number">{clubTypes.filter(type => type.clubs.length > 0).length}</div>
-            <div className="stat-label">Tipos Activos</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Club Types Section */}
-      <div className="club-types-section">
-        <div className="section-header">
-          <h2 className="section-title">
-            <span className="material-icons">list</span>
-            Categorías de Clubs
-          </h2>
-          <div className="section-actions">
-            <div className="search-box">
-              <span className="material-icons">search</span>
-              <input
-                type="text"
-                placeholder="Buscar tipos de club..."
-                className="search-input"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-
+      <div className="club-types-content">
         {isLoading ? (
-          <div className="loading-state">
-            <span className="material-icons">hourglass_empty</span>
-            <p>Cargando tipos de club...</p>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Cargando categorías...</p>
           </div>
-        ) : filteredClubTypes.length === 0 ? (
+        ) : clubTypes.length === 0 ? (
           <div className="empty-state">
             <span className="material-icons">category</span>
-            <h3>No hay tipos de club registrados</h3>
-            <p>Crea tu primer tipo de club para organizar tus experiencias nocturnas</p>
-            <button
-              className="btn btn-primary"
-              onClick={() => setIsModalOpen(true)}
+            <h3>No hay categorías de club</h3>
+            <p>Comienza creando tu primera categoría de club</p>
+            <button 
+              className="create-first-btn"
+              onClick={handleCreate}
             >
-              <span className="material-icons">add_circle</span>
-              Crear Primer Tipo
+              <span className="material-icons">add</span>
+              Crear Primera Categoría
             </button>
           </div>
         ) : (
-          <>
-            {/* Desktop Grid View */}
-            <div className="club-types-grid-desktop desktop-only">
-              <div className="grid-header">
-                <div className="grid-cell">Tipo de Club</div>
-                <div className="grid-cell">Descripción</div>
-                <div className="grid-cell">Clubs</div>
-                <div className="grid-cell">Estado</div>
-                <div className="grid-cell">Acciones</div>
-              </div>
-              {filteredClubTypes.map((clubType) => (
-                <div key={clubType.id} className="grid-row">
-                  <div className="grid-cell club-type-cell">
-                    <div className="club-type-info">
-                      <div className="club-type-name">{clubType.name}</div>
-                    </div>
+          <div className="club-types-grid">
+            {clubTypes.map((clubType) => (
+              <div key={clubType.id} className="club-type-card">
+                <div className="card-header">
+                  <div className="club-type-info">
+                    <span className="material-icons">category</span>
+                    <h3>{clubType.name}</h3>
                   </div>
-                  <div className="grid-cell">-</div>
-                  <div className="grid-cell">{clubType.clubs.length} clubs</div>
-                  <div className="grid-cell">
-                    <span className={`status-badge ${clubType.clubs.length > 0 ? 'active' : 'inactive'}`}>
-                      {clubType.clubs.length > 0 ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </div>
-                  <div className="grid-cell actions-cell">
+                  <div className="card-actions">
                     <button
-                      className="btn btn-icon edit-btn"
+                      className="edit-btn"
                       onClick={() => handleEdit(clubType)}
-                      title="Editar tipo de club"
+                      title="Editar"
                     >
                       <span className="material-icons">edit</span>
                     </button>
                     <button
-                      className="btn btn-icon delete-btn"
+                      className="delete-btn"
                       onClick={() => handleDelete(clubType.id)}
-                      title="Eliminar tipo de club"
+                      title="Eliminar"
                     >
                       <span className="material-icons">delete</span>
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Mobile Cards View */}
-            <div className="club-types-cards mobile-only">
-              {filteredClubTypes.map((clubType) => (
-                <div key={clubType.id} className="club-type-card">
-                  <div className="card-header">
-                    <div className="club-type-title">
-                      <span className="material-icons">category</span>
-                      <h3>{clubType.name}</h3>
-                    </div>
-                    <div className="card-actions">
-                      <button
-                        className="btn btn-icon edit-btn"
-                        onClick={() => handleEdit(clubType)}
-                      >
-                        <span className="material-icons">edit</span>
-                      </button>
-                      <button
-                        className="btn btn-icon delete-btn"
-                        onClick={() => handleDelete(clubType.id)}
-                      >
-                        <span className="material-icons">delete</span>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="card-content">
-                    <p className="club-type-description">Tipo de club</p>
-                    
-                    <div className="club-type-details">
-                      <div className="detail">
-                        <span className="material-icons sm">nightlife</span>
-                        <span>{clubType.clubs.length} clubs</span>
-                      </div>
-                      <div className="detail">
-                        <span className="material-icons sm">schedule</span>
-                        <span>Actualizado: {new Date(clubType.updatedAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-
-                    <div className="status-info">
-                      <span className={`status-badge ${clubType.clubs.length > 0 ? 'active' : 'inactive'}`}>
-                        {clubType.clubs.length > 0 ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </div>
+                <div className="card-content">
+                  <div className="club-type-details">
+                    <p><strong>ID:</strong> {clubType.id}</p>
+                    <p><strong>Creado:</strong> {new Date(clubType.createdAt).toLocaleDateString()}</p>
+                    <p><strong>Actualizado:</strong> {new Date(clubType.updatedAt).toLocaleDateString()}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Club Type Modal */}
       <ClubTypeModal
         isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSuccess={fetchClubTypes}
-        editingType={editingType}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingClubType(null);
+        }}
+        onSuccess={handleModalSuccess}
+        editingClubType={editingClubType}
       />
     </div>
   );

@@ -6,6 +6,7 @@ import './RootPage.css';
 import RouteReservations from '../../../routes/sidebar/RouteReservations';
 import RouteYacht from '../../../routes/sidebar/RouteYacht';
 import RouteTours from '../../../routes/sidebar/RouteTours';
+import RouteClubs from '../../../routes/sidebar/RouteClubs';
 import { PrivateRoutes } from '../../../models/routes';
 
 const RootPage = () => {
@@ -20,6 +21,7 @@ const RootPage = () => {
                     <Route path={`/${PrivateRoutes.RESERVATIONS}`} element={<RouteReservations />} />
                     <Route path={`/${PrivateRoutes.YACHTS}/*`} element={<RouteYacht />} />
                     <Route path={`/${PrivateRoutes.TOURS}/*`} element={<RouteTours />} />
+                    <Route path={`/${PrivateRoutes.CLUBS}/*`} element={<RouteClubs />} />
                 </Routes>
                 </div>
             </div>

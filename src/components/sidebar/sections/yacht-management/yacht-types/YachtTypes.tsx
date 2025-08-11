@@ -24,7 +24,7 @@ const YachtTypes: React.FC = () => {
   const fetchYachtTypes = async () => {
     setIsLoading(true);
     try {
-      const response: any = await APIs.getAllYachtType();
+      const response: any = await APIs.getAllYachtCategories();
       if (response.data) {
         setYachtTypes(response.data);
       }
@@ -47,7 +47,7 @@ const YachtTypes: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este tipo de yate?')) {
+            if (window.confirm('¿Estás seguro de que quieres eliminar esta categoría de yate?')) {
       try {
         await APIs.deleteYachtType(id);
         // Recargar datos después de eliminar
@@ -71,10 +71,10 @@ const YachtTypes: React.FC = () => {
         <div className="header-content">
           <h1 className="page-title">
             <span className="material-icons">category</span>
-            Tipos de Yates
+            Categorías de Yates
           </h1>
           <p className="page-subtitle">
-            Administra las categorías y tipos de yates en tu flota
+            Administra las categorías de yates en tu flota
           </p>
         </div>
         <button 
@@ -82,7 +82,7 @@ const YachtTypes: React.FC = () => {
           onClick={() => setIsModalOpen(true)}
         >
           <span className="material-icons">add_circle</span>
-          Nuevo Tipo
+          Nueva Categoría
         </button>
       </div>
 
@@ -94,14 +94,14 @@ const YachtTypes: React.FC = () => {
         <div className="section-header">
           <h2 className="section-title">
             <span className="material-icons">list</span>
-            Tipos de Yates
+            Categorías de Yates
           </h2>
           <div className="section-actions">
             <div className="search-box">
               <span className="material-icons">search</span>
               <input
                 type="text"
-                placeholder="Buscar tipos de yates..."
+                placeholder="Buscar categorías de yates..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-input"
@@ -113,18 +113,18 @@ const YachtTypes: React.FC = () => {
         {isLoading ? (
           <div className="loading-state">
             <div className="loading-spinner"></div>
-            <p>Cargando tipos de yates...</p>
+            <p>Cargando categorías de yates...</p>
           </div>
         ) : filteredYachtTypes.length === 0 ? (
           <div className="empty-state">
             <span className="material-icons">category</span>
-            <h3>No hay tipos de yates</h3>
-            <p>Comienza creando tu primer tipo de yate</p>
+            <h3>No hay categorías de yates</h3>
+            <p>Comienza creando tu primera categoría de yate</p>
             <button 
               className="btn btn-primary"
               onClick={() => setIsModalOpen(true)}
             >
-              Crear Primer Tipo
+              Crear Primera Categoría
             </button>
           </div>
                 ) : (
@@ -149,7 +149,7 @@ const YachtTypes: React.FC = () => {
                       </div>
                       <div>
                         <div className="type-name">{type.name}</div>
-                        <div className="type-details">Tipo de yate</div>
+                        <div className="type-details">Categoría de yate</div>
                       </div>
                     </div>
                   </div>

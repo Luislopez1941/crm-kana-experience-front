@@ -80,14 +80,14 @@ const YachtTypeModal: React.FC<YachtTypeModalProps> = ({ isOpen, onClose, onSucc
       if (editingType) {
         // Update existing yacht type
         const response: any = await APIs.updateYachtType(editingType.id, formData);
-        showSuccess(response.message || 'Tipo de yate actualizado exitosamente');
+        showSuccess(response.message || 'Categoría de yate actualizada exitosamente');
         onSuccess(); // Recargar datos
         handleClose();
       } else {
         // Create new yacht type
         const response = await APIs.createYachtType(formData);
         const responseData = response as any;
-        showSuccess(responseData.message || 'Tipo de yate creado exitosamente');
+        showSuccess(responseData.message || 'Categoría de yate creada exitosamente');
         onSuccess(); // Recargar datos
         handleClose();
       }
@@ -100,7 +100,7 @@ const YachtTypeModal: React.FC<YachtTypeModalProps> = ({ isOpen, onClose, onSucc
       } else if (error.message) {
         showError(error.message);
       } else {
-        showError('Error al guardar el tipo de yate');
+        showError('Error al guardar la categoría de yate');
       }
     } finally {
       setIsLoading(false);
@@ -122,7 +122,7 @@ const YachtTypeModal: React.FC<YachtTypeModalProps> = ({ isOpen, onClose, onSucc
         <div className="yacht-type-modal-header">
           <h2 className="yacht-type-modal-title">
             <span className="material-icons">category</span>
-            {editingType ? 'Editar Tipo de Yate' : 'Nuevo Tipo de Yate'}
+            {editingType ? 'Editar Categoría de Yate' : 'Nueva Categoría de Yate'}
           </h2>
           <button className="yacht-type-close-btn" onClick={handleClose}>
             <span className="material-icons">close</span>
@@ -132,7 +132,7 @@ const YachtTypeModal: React.FC<YachtTypeModalProps> = ({ isOpen, onClose, onSucc
         <form className="yacht-type-modal-form" onSubmit={handleSubmit}>
           <div className="yacht-type-form-group">
             <label htmlFor="name" className="yacht-type-form-label">
-              Nombre del Tipo *
+              Nombre de la Categoría *
             </label>
             <div className="yacht-type-input-wrapper">
               <span className="material-icons yacht-type-input-icon">category</span>
@@ -141,7 +141,7 @@ const YachtTypeModal: React.FC<YachtTypeModalProps> = ({ isOpen, onClose, onSucc
                 id="name"
                 name="name"
                 className={`yacht-type-form-input ${errors.name ? 'error' : ''}`}
-                placeholder="Ej: Yate de Lujo, Catamarán, Velero..."
+                placeholder="Ej: Yate de Lujo, Catamarán, Velero, Lancha..."
                 value={formData.name}
                 onChange={handleInputChange}
                 required

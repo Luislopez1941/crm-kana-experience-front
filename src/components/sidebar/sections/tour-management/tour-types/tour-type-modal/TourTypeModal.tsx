@@ -52,7 +52,7 @@ const TourTypeModal: React.FC<TourTypeModalProps> = ({
 
     try {
       if (!formData.name.trim()) {
-        showError('El nombre del tipo de tour es requerido');
+        showError('El nombre de la categoría de tour es requerido');
         return;
       }
 
@@ -60,11 +60,11 @@ const TourTypeModal: React.FC<TourTypeModalProps> = ({
         // Update existing tour type
         await APIs.updateTourType(editingType.id, formData);
 
-        showSuccess('Tipo de tour actualizado exitosamente');
+        showSuccess('Categoría de tour actualizada exitosamente');
       } else {
         // Create new tour type
         await APIs.createTourType(formData);
-        showSuccess('Tipo de tour creado exitosamente');
+        showSuccess('Categoría de tour creada exitosamente');
       }
 
       handleClose();
@@ -77,7 +77,7 @@ const TourTypeModal: React.FC<TourTypeModalProps> = ({
       } else if (error.message) {
         showError(error.message);
       } else {
-        showError('Error al guardar el tipo de tour');
+        showError('Error al guardar la categoría de tour');
       }
     } finally {
       setIsLoading(false);
@@ -100,7 +100,7 @@ const TourTypeModal: React.FC<TourTypeModalProps> = ({
           <div className="modal-header">
             <div className="modal-title">
               <span className="material-icons">category</span>
-              <h2>{editingType ? 'Editar Tipo de Tour' : 'Nuevo Tipo de Tour'}</h2>
+              <h2>{editingType ? 'Editar Categoría de Tour' : 'Nueva Categoría de Tour'}</h2>
             </div>
             <button className="close-btn" onClick={handleClose}>
               <span className="material-icons">close</span>

@@ -13,13 +13,12 @@
   padding: var(--spacing-lg);
 }
 
-.club-type-modal .club-type-modal-container {
+.club-type-modal .modal-container {
   background-color: var(--background);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  width: 95%;
+  width: 90%;
   max-width: 500px;
-  max-height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -73,8 +72,6 @@
 
 .club-type-modal .modal-content {
   padding: var(--spacing-lg);
-  flex: 1;
-  overflow-y: auto;
 }
 
 .club-type-modal .club-type-form {
@@ -90,63 +87,62 @@
 }
 
 .club-type-modal .form-group label {
-  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--text);
+  font-size: var(--font-size-sm);
 }
 
 .club-type-modal .form-group input {
   padding: var(--spacing-md);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background-color: var(--background);
   color: var(--text);
   font-size: var(--font-size-base);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  outline: none;
+  transition: all 0.2s ease;
 }
 
 .club-type-modal .form-group input:focus {
+  outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .club-type-modal .form-group input:disabled {
   background-color: var(--background-secondary);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: not-allowed;
 }
 
-/* Modal Actions */
 .club-type-modal .modal-actions {
   display: flex;
-  justify-content: flex-end;
   gap: var(--spacing-md);
+  justify-content: flex-end;
   padding-top: var(--spacing-lg);
   border-top: 1px solid var(--border);
-  margin-top: var(--spacing-lg);
 }
 
 .club-type-modal .modal-actions .btn {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--radius-sm);
-  font-weight: var(--font-weight-medium);
+  gap: var(--spacing-xs);
   transition: all 0.2s ease;
-  cursor: pointer;
   border: none;
+  font-size: var(--font-size-base);
 }
 
 .club-type-modal .btn-secondary {
   background-color: var(--background-secondary);
-  color: var(--text-secondary);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .club-type-modal .btn-secondary:hover {
-  background-color: var(--border);
-  color: var(--text);
+  background-color: var(--background-tertiary);
 }
 
 .club-type-modal .btn-primary {
@@ -155,11 +151,11 @@
 }
 
 .club-type-modal .btn-primary:hover {
-  background-color: var(--primary-hover);
+  background-color: var(--primary-dark);
 }
 
 .club-type-modal .btn-primary:disabled {
-  background-color: var(--text-muted);
+  background-color: var(--text-secondary);
   cursor: not-allowed;
 }
 
@@ -190,16 +186,15 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .club-type-modal .club-type-modal-container {
-    width: 100%;
-    height: 100vh;
-    border-radius: 0;
+  .club-type-modal .modal-container {
+    width: 95%;
+    margin: var(--spacing-md);
   }
-  
+
   .club-type-modal .modal-actions {
     flex-direction: column;
   }
-  
+
   .club-type-modal .modal-actions .btn {
     width: 100%;
     justify-content: center;
@@ -210,7 +205,7 @@
   .club-type-modal .modal-overlay {
     padding: var(--spacing-sm);
   }
-  
+
   .club-type-modal .modal-header,
   .club-type-modal .modal-content {
     padding: var(--spacing-md);

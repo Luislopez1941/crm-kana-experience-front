@@ -49,7 +49,7 @@ const TourTypes: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este tipo de tour?')) {
+            if (window.confirm('¿Estás seguro de que quieres eliminar esta categoría de tour?')) {
       try {
         await APIs.deleteTourType(id);
         // Recargar datos después de eliminar
@@ -73,10 +73,10 @@ const TourTypes: React.FC = () => {
         <div className="header-content">
           <h1 className="page-title">
             <span className="material-icons">category</span>
-            Tipos de Tours
+            Categorías de Tours
           </h1>
           <p className="page-subtitle">
-            Administra las categorías y tipos de tours en tu sistema
+            Administra las categorías de tours en tu sistema
           </p>
         </div>
         <button 
@@ -84,21 +84,21 @@ const TourTypes: React.FC = () => {
           onClick={() => setIsModalOpen(true)}
         >
           <span className="material-icons">add_circle</span>
-          Nuevo Tipo
+          Nueva Categoría
         </button>
       </div>
 
       {/* Tour Types Section */}
       <div className="tour-types-section">
         <div className="section-header">
-          <h2 className="section-title">Lista de Tipos de Tours</h2>
+          <h2 className="section-title">Lista de Categorías de Tours</h2>
           <div className="section-actions">
             <div className="search-box">
               <span className="material-icons">search</span>
               <input
                 type="text"
                 className="search-input"
-                placeholder="Buscar tipos de tours..."
+                placeholder="Buscar categorías de tours..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -110,7 +110,7 @@ const TourTypes: React.FC = () => {
         {isLoading && (
           <div className="loading-state">
             <div className="loading-spinner"></div>
-            <p>Cargando tipos de tours...</p>
+            <p>Cargando categorías de tours...</p>
           </div>
         )}
 
@@ -118,11 +118,11 @@ const TourTypes: React.FC = () => {
         {!isLoading && filteredTourTypes.length === 0 && (
           <div className="empty-state">
             <span className="material-icons">category</span>
-            <h3>No hay tipos de tours</h3>
+            <h3>No hay categorías de tours</h3>
             <p>
               {searchTerm 
-                ? 'No se encontraron tipos de tours con ese nombre.'
-                : 'Comienza creando tu primer tipo de tour.'
+                ? 'No se encontraron categorías de tours con ese nombre.'
+                : 'Comienza creando tu primera categoría de tour.'
               }
             </p>
             {!searchTerm && (
@@ -160,7 +160,7 @@ const TourTypes: React.FC = () => {
                       </div>
                       <div>
                         <div className="type-name">{type.name}</div>
-                        <div className="type-details">Tipo de tour</div>
+                        <div className="type-details">Categoría de tour</div>
                       </div>
                     </div>
                   </div>

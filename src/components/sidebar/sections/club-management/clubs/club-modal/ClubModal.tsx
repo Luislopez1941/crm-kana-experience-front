@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { usePopupStore } from '../../../../../../zustand/popupStore';
+
 import APIs from '../../../../../../services/services/APIs';
 import './styles/ClubModal.css';
 
@@ -15,15 +17,16 @@ interface ClubForm {
   description?: string;
   address?: string;
   phone?: string;
-  website?: string;
   typeId: number;
   stateId: number;
   municipalityId: number;
   localityId: number;
+  images: string[];
 }
 
 const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess, editingClub }) => {
   const { showSuccess, showError } = usePopupStore();
+
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTypes, setIsLoadingTypes] = useState(false);
@@ -36,12 +39,16 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
     description: '',
     address: '',
     phone: '',
-    website: '',
     typeId: 0,
     stateId: 0,
     municipalityId: 0,
-    localityId: 0
+    localityId: 0,
+    images: []
   });
+
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [originalImages, setOriginalImages] = useState<any[]>([]);
+  const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
 
   const [clubTypes, setClubTypes] = useState<any[]>([]);
   const [states, setStates] = useState<any[]>([]);
@@ -58,7 +65,6 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
       }
     } catch (error) {
       console.error('Error fetching club types:', error);
-      showError('Error al cargar los tipos de club');
     } finally {
       setIsLoadingTypes(false);
     }
@@ -74,7 +80,6 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
       }
     } catch (error) {
       console.error('Error fetching states:', error);
-      showError('Error al cargar los estados');
     } finally {
       setIsLoadingStates(false);
     }
@@ -90,7 +95,6 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
       }
     } catch (error) {
       console.error('Error fetching municipalities:', error);
-      showError('Error al cargar los municipios');
     } finally {
       setIsLoadingMunicipalities(false);
     }
@@ -106,7 +110,6 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
       }
     } catch (error) {
       console.error('Error fetching localities:', error);
-      showError('Error al cargar las localidades');
     } finally {
       setIsLoadingLocalities(false);
     }
@@ -123,17 +126,39 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
   // Load editing club data
   useEffect(() => {
     if (editingClub) {
+      // Handle images as array of objects or strings
+      let images: string[] = [];
+      let originalImages: any[] = [];
+      
+      if (editingClub.images) {
+        if (Array.isArray(editingClub.images)) {
+          // Check if it's an array of objects with url property (from backend)
+          if (editingClub.images.length > 0 && typeof editingClub.images[0] === 'object' && (editingClub.images[0] as any)?.url) {
+            // Keep the original objects for tracking IDs, but extract URLs for formData
+            originalImages = editingClub.images;
+            images = editingClub.images.map((img: any) => (img as any).url);
+          } else {
+            // It's already an array of strings (base64 or URLs)
+            images = editingClub.images;
+          }
+        }
+      }
+
       setFormData({
         name: editingClub.name || '',
         description: editingClub.description || '',
         address: editingClub.address || '',
         phone: editingClub.phone || '',
-        website: editingClub.website || '',
         typeId: editingClub.typeId || 0,
         stateId: editingClub.stateId || 0,
         municipalityId: editingClub.municipalityId || 0,
-        localityId: editingClub.localityId || 0
+        localityId: editingClub.localityId || 0,
+        images: images
       });
+
+      setImagePreviews(images);
+      setOriginalImages(originalImages);
+      setDeletedImageIds([]);
 
       // Load related data
       if (editingClub.stateId) {
@@ -149,12 +174,15 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
         description: '',
         address: '',
         phone: '',
-        website: '',
         typeId: 0,
         stateId: 0,
         municipalityId: 0,
-        localityId: 0
+        localityId: 0,
+        images: []
       });
+      setImagePreviews([]);
+      setOriginalImages([]);
+      setDeletedImageIds([]);
       setMunicipalities([]);
       setLocalities([]);
     }
@@ -192,8 +220,58 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
     }));
   };
 
+  // Dropzone configuration for multiple images
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    acceptedFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        setImagePreviews(prev => {
+          const updatedImages = [...prev, base64String];
+          setFormData(formData => ({
+            ...formData,
+            images: updatedImages
+          }));
+          return updatedImages;
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp']
+    },
+    maxFiles: 10,
+    maxSize: 5 * 1024 * 1024 // 5MB per image
+  });
+
+  const removeImage = (index: number) => {
+    setImagePreviews(prev => {
+      const updatedImages = prev.filter((_, i) => i !== index);
+      setFormData(formData => ({
+        ...formData,
+        images: updatedImages
+      }));
+      return updatedImages;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const dataToSend: any = {
+      ...formData,
+      images: imagePreviews
+    };
+
+    // Add delete_images for updates
+    if (editingClub && deletedImageIds.length > 0) {
+      dataToSend.delete_images = deletedImageIds;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -205,13 +283,13 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
 
       if (editingClub) {
         // Update existing club
-        const response: any = await APIs.updateClub(editingClub.id, formData);
+        const response: any = await APIs.updateClub(editingClub.id, dataToSend);
         showSuccess(response.message || 'Club actualizado exitosamente');
         onSuccess();
         handleClose();
       } else {
         // Create new club
-        const response: any = await APIs.createClub(formData);
+        const response: any = await APIs.createClub(dataToSend);
         showSuccess(response.message || 'Club creado exitosamente');
         onSuccess();
         handleClose();
@@ -241,8 +319,12 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
       typeId: 0,
       stateId: 0,
       municipalityId: 0,
-      localityId: 0
+      localityId: 0,
+      images: []
     });
+    setImagePreviews([]);
+    setOriginalImages([]);
+    setDeletedImageIds([]);
     setIsLoading(false);
     onClose();
   };
@@ -251,192 +333,265 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
 
   return (
     <div className="club-modal">
-      <div className="modal-overlay" onClick={handleClose}>
-        <div className="club-modal-container" onClick={(e) => e.stopPropagation()}>
+      <div className="club-modal__overlay" onClick={handleClose}>
+        <div className="club-modal__container" onClick={(e) => e.stopPropagation()}>
           {/* Modal Header */}
-          <div className="modal-header">
-            <div className="modal-title">
-              <span className="material-icons">nightlife</span>
-              <h2>{editingClub ? 'Editar Club' : 'Nuevo Club'}</h2>
+          <div className="club-modal__header">
+            <div className="club-modal__title">
+              <div className="club-modal__title-icon">
+                <span className="material-icons">nightlife</span>
+              </div>
+              <div className="club-modal__title-content">
+                <h2>{editingClub ? 'Editar Club' : 'Nuevo Club'}</h2>
+                <p>Gestiona la información de tu club para el entretenimiento</p>
+              </div>
             </div>
-            <button className="close-btn" onClick={handleClose}>
+            <button className="club-modal__close-btn" onClick={handleClose}>
               <span className="material-icons">close</span>
             </button>
           </div>
 
           {/* Modal Content */}
-          <div className="modal-content">
-            <form className="club-form" onSubmit={handleSubmit}>
-              <div className="form-grid">
-                <div className="form-group">
+          <div className="club-modal__content">
+            <form className="club-modal__form" onSubmit={handleSubmit}>
+              <div className="club-modal__form-grid">
+                <div className="club-modal__form-group">
                   <label htmlFor="name">Nombre del Club *</label>
+                  <div className="club-modal__input-wrapper">
+                    <span className="club-modal__input-icon material-icons">nightlife</span>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="Ej: Club Nocturno Ibiza"
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="club-modal__form-group">
+                  <label htmlFor="typeId">Tipo de Club *</label>
+                  <div className="club-modal__input-wrapper">
+                    <span className="club-modal__input-icon material-icons">category</span>
+                    <select
+                      id="typeId"
+                      name="typeId"
+                      value={formData.typeId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading || isLoadingTypes}
+                    >
+                      <option value="">
+                        {isLoadingTypes ? 'Cargando tipos...' : 'Seleccionar tipo'}
+                      </option>
+                      {clubTypes.map(type => (
+                        <option key={type.id} value={type.id}>{type.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="club-modal__form-group">
+                  <label htmlFor="phone">Teléfono</label>
+                  <div className="club-modal__input-wrapper">
+                    <span className="club-modal__input-icon material-icons">phone</span>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="Ej: +52 998 123 4567"
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="club-modal__form-group">
+                  <label htmlFor="stateId">Estado *</label>
+                  <div className="club-modal__input-wrapper">
+                    <span className="club-modal__input-icon material-icons">location_on</span>
+                    <select
+                      id="stateId"
+                      name="stateId"
+                      value={formData.stateId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading || isLoadingStates}
+                    >
+                      <option value="">
+                        {isLoadingStates ? 'Cargando estados...' : 'Seleccionar estado'}
+                      </option>
+                      {states.map(state => (
+                        <option key={state.id} value={state.id}>{state.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="club-modal__form-group">
+                  <label htmlFor="municipalityId">Municipio *</label>
+                  <div className="club-modal__input-wrapper">
+                    <span className="club-modal__input-icon material-icons">location_city</span>
+                    <select
+                      id="municipalityId"
+                      name="municipalityId"
+                      value={formData.municipalityId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading || isLoadingMunicipalities || !formData.stateId}
+                    >
+                      <option value="">
+                        {isLoadingMunicipalities ? 'Cargando municipios...' : 
+                         !formData.stateId ? 'Selecciona un estado primero' : 'Seleccionar municipio'}
+                      </option>
+                      {municipalities.map(municipality => (
+                        <option key={municipality.id} value={municipality.id}>{municipality.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="club-modal__form-group">
+                  <label htmlFor="localityId">Localidad *</label>
+                  <div className="club-modal__input-wrapper">
+                    <span className="club-modal__input-icon material-icons">location_on</span>
+                    <select
+                      id="localityId"
+                      name="localityId"
+                      value={formData.localityId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading || isLoadingLocalities || !formData.municipalityId}
+                    >
+                      <option value="">
+                        {isLoadingLocalities ? 'Cargando localidades...' : 
+                         !formData.municipalityId ? 'Selecciona un municipio primero' : 'Seleccionar localidad'}
+                      </option>
+                      {localities.map(locality => (
+                        <option key={locality.id} value={locality.id}>{locality.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="club-modal__form-group full-width">
+                <label htmlFor="address">Dirección</label>
+                <div className="club-modal__input-wrapper">
+                  <span className="club-modal__input-icon material-icons">business</span>
                   <input
                     type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
+                    id="address"
+                    name="address"
+                    value={formData.address}
                     onChange={handleInputChange}
-                    placeholder="Ej: Club Nocturno Ibiza"
-                    required
+                    placeholder="Ej: Av. Tulum 123, Zona Hotelera"
                     disabled={isLoading}
                   />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="typeId">Tipo de Club *</label>
-                  <select
-                    id="typeId"
-                    name="typeId"
-                    value={formData.typeId}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isLoading || isLoadingTypes}
-                  >
-                    <option value="">
-                      {isLoadingTypes ? 'Cargando tipos...' : 'Seleccionar tipo'}
-                    </option>
-                    {clubTypes.map(type => (
-                      <option key={type.id} value={type.id}>{type.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="phone">Teléfono</label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="Ej: +52 998 123 4567"
-                    disabled={isLoading}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="website">Sitio Web</label>
-                  <input
-                    type="url"
-                    id="website"
-                    name="website"
-                    value={formData.website}
-                    onChange={handleInputChange}
-                    placeholder="Ej: https://www.club.com"
-                    disabled={isLoading}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="stateId">Estado *</label>
-                  <select
-                    id="stateId"
-                    name="stateId"
-                    value={formData.stateId}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isLoading || isLoadingStates}
-                  >
-                    <option value="">
-                      {isLoadingStates ? 'Cargando estados...' : 'Seleccionar estado'}
-                    </option>
-                    {states.map(state => (
-                      <option key={state.id} value={state.id}>{state.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="municipalityId">Municipio *</label>
-                  <select
-                    id="municipalityId"
-                    name="municipalityId"
-                    value={formData.municipalityId}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isLoading || isLoadingMunicipalities || !formData.stateId}
-                  >
-                    <option value="">
-                      {isLoadingMunicipalities ? 'Cargando municipios...' : 
-                       !formData.stateId ? 'Selecciona un estado primero' : 'Seleccionar municipio'}
-                    </option>
-                    {municipalities.map(municipality => (
-                      <option key={municipality.id} value={municipality.id}>{municipality.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="localityId">Localidad *</label>
-                  <select
-                    id="localityId"
-                    name="localityId"
-                    value={formData.localityId}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isLoading || isLoadingLocalities || !formData.municipalityId}
-                  >
-                    <option value="">
-                      {isLoadingLocalities ? 'Cargando localidades...' : 
-                       !formData.municipalityId ? 'Selecciona un municipio primero' : 'Seleccionar localidad'}
-                    </option>
-                    {localities.map(locality => (
-                      <option key={locality.id} value={locality.id}>{locality.name}</option>
-                    ))}
-                  </select>
                 </div>
               </div>
 
-              <div className="form-group full-width">
-                <label htmlFor="address">Dirección</label>
-                <input
-                  type="text"
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="Ej: Av. Tulum 123, Zona Hotelera"
-                  disabled={isLoading}
-                />
+              <div className="club-modal__form-group full-width">
+                <label>Imágenes del Club</label>
+                <div 
+                  {...getRootProps()} 
+                  className={`club-modal__image-dropzone ${isDragActive ? 'club-modal__drag-active' : ''} ${imagePreviews.length > 0 ? 'club-modal__has-images' : ''}`}
+                >
+                  <input {...getInputProps()} />
+                  {imagePreviews.length > 0 ? (
+                    <div className="club-modal__images-grid">
+                      {imagePreviews.map((image, index) => (
+                        <div key={index} className="club-modal__image-preview-item">
+                          <img 
+                            src={image} 
+                            alt={`Preview ${index + 1}`} 
+                          />
+                          <button
+                            type="button"
+                            className="club-modal__remove-single-image-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeImage(index);
+                            }}
+                          >
+                            <span className="material-icons">close</span>
+                          </button>
+                        </div>
+                      ))}
+                      <div className="club-modal__add-more-images">
+                        <span className="material-icons">add_photo_alternate</span>
+                        <p>Agregar más imágenes</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="club-modal__dropzone-content">
+                      <span className="club-modal__dropzone-icon material-icons">cloud_upload</span>
+                      <p>{isDragActive ? 'Suelta las imágenes aquí' : 'Haz clic o arrastra imágenes aquí'}</p>
+                      <small>Formatos: JPG, PNG, GIF, WEBP (máx. 10 imágenes, 5MB cada una)</small>
+                    </div>
+                  )}
+                </div>
+                {imagePreviews.length > 0 && (
+                  <button 
+                    type="button" 
+                    className="club-modal__remove-all-images-btn"
+                    onClick={() => {
+                      setImagePreviews([]);
+                      setFormData(prev => ({ ...prev, images: [] }));
+                    }}
+                    disabled={isLoading}
+                  >
+                    <span className="material-icons">delete_sweep</span>
+                    Eliminar todas las imágenes
+                  </button>
+                )}
               </div>
 
-              <div className="form-group full-width">
+              <div className="club-modal__form-group full-width">
                 <label htmlFor="description">Descripción</label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Describe el club, ambiente, servicios, etc."
-                  rows={4}
-                  disabled={isLoading}
-                />
+                <div className="club-modal__input-wrapper">
+                  <span className="club-modal__input-icon material-icons">description</span>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Describe el club, ambiente, servicios, etc."
+                    rows={4}
+                    disabled={isLoading}
+                  />
+                </div>
               </div>
 
               {/* Modal Actions */}
-              <div className="modal-actions">
+              <div className="club-modal__actions">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="club-modal__btn club-modal__btn-secondary"
                   onClick={handleClose}
                   disabled={isLoading}
                 >
+                  <span className="material-icons">close</span>
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary"
-                  disabled={isLoading}
+                  className="club-modal__btn club-modal__btn-primary"
+                  disabled={isLoading || !formData.name || !formData.typeId || !formData.stateId || !formData.municipalityId || !formData.localityId}
                 >
                   {isLoading ? (
                     <>
-                      <span className="loading-spinner"></span>
-                      {editingClub ? 'Actualizando...' : 'Creando...'}
+                      <div className="club-modal__loading-spinner"></div>
+                      <span>{editingClub ? 'Actualizando...' : 'Creando...'}</span>
                     </>
                   ) : (
                     <>
                       <span className="material-icons">save</span>
-                      {editingClub ? 'Actualizar Club' : 'Crear Club'}
+                      <span>{editingClub ? 'Actualizar' : 'Crear'} Club</span>
                     </>
                   )}
                 </button>

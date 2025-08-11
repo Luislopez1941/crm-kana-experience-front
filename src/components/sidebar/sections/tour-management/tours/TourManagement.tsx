@@ -2,24 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TourModal from './tour-modal/TourModal';
 import APIs from '../../../../../services/services/APIs';
-import { useStore } from '../../../../../zustand/useStore';
+
 import './styles/TourManagement.css';
 
 interface Tour {
   id: number;
   name: string;
   description: string;
-  capacity: number;
-  price: number;
   location: string;
   status: string;
-  tourTypeId: number;
-  tourType: {
+  horarios?: string;
+  duracion?: string;
+  edadMinima?: string;
+  transportacion?: string;
+  tourCategoryId: number;
+  tourCategory: {
     id: number;
     name: string;
     createdAt: string;
     updatedAt: string;
   };
+  pricing: Array<{
+    personas: number;
+    precio: number;
+  }>;
   images: Array<{
     id: number;
     url: string;
@@ -38,11 +44,21 @@ interface Tour {
   updatedAt: string;
 }
 
+interface TourCategory {
+  id: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const TourManagement: React.FC = () => {
   const navigate = useNavigate();
-  const { url }: any = useStore();
+
   const [tours, setTours] = useState<Tour[]>([]);
+  const [tourCategories, setTourCategories] = useState<TourCategory[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [filteredTours, setFilteredTours] = useState<Tour[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editingTour, setEditingTour] = useState<Tour | null>(null);
@@ -54,12 +70,24 @@ const TourManagement: React.FC = () => {
     }).format(price);
   };
 
+  const fetchTourCategories = async () => {
+    try {
+      const response: any = await APIs.getAllTourTypes();
+      if (response?.data) {
+        setTourCategories(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching tour categories:', error);
+    }
+  };
+
   const fetchTours = async () => {
     setIsLoading(true);
     try {
       const response: any = await APIs.getAllTours();
       if (response.data) {
         setTours(response.data);
+        setFilteredTours(response.data);
       }
     } catch (error) {
       console.error('Error fetching tours:', error);
@@ -68,9 +96,71 @@ const TourManagement: React.FC = () => {
     }
   };
 
+  const fetchToursByCategory = async (categoryId: number) => {
+    setIsLoading(true);
+    try {
+      // TODO: Implement API call to get tours by category
+      const response: any = await APIs.getAllTours();
+      if (response?.data) {
+        const filtered = response.data.filter((tour: Tour) => tour.tourCategoryId === categoryId);
+        setFilteredTours(filtered);
+      }
+    } catch (error) {
+      console.error('Error fetching tours by category:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    
+    if (categoryId === '') {
+      // Si no hay categoría seleccionada, mostrar todos los tours
+      setFilteredTours(tours);
+    } else {
+      // Filtrar por categoría seleccionada
+      fetchToursByCategory(Number(categoryId));
+    }
+  };
+
+  const reloadFilteredData = () => {
+    if (selectedCategory === '') {
+      fetchTours();
+    } else {
+      fetchToursByCategory(Number(selectedCategory));
+    }
+  };
+
+  // Función para filtrar tours por search term y categoría
+  const getFilteredTours = () => {
+    let filtered = tours;
+    
+    // Filtrar por categoría si hay una seleccionada
+    if (selectedCategory !== '') {
+      filtered = filtered.filter(tour => tour.tourCategoryId === Number(selectedCategory));
+    }
+    
+    // Filtrar por search term
+    if (searchTerm.trim() !== '') {
+      filtered = filtered.filter(tour =>
+        tour.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        tour.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        tour.tourCategory.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  };
+
   useEffect(() => {
     fetchTours();
+    fetchTourCategories();
   }, []);
+
+  useEffect(() => {
+    setFilteredTours(getFilteredTours());
+  }, [tours, selectedCategory, searchTerm]);
 
   const handleEdit = (tour: Tour) => {
     setEditingTour(tour);
@@ -94,27 +184,18 @@ const TourManagement: React.FC = () => {
     setEditingTour(null);
   };
 
-  const filteredTours = tours.filter(tour =>
-    tour.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tour.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tour.tourType.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <div className="tour-management-page">
       {/* Page Header */}
-      <div className="page-header">
-        <div className="header-content">
-          <h1 className="page-title">
+      <div className="tour-management-page__page-header">
+        <div className="tour-management-page__header-content">
+          <h1 className="tour-management-page__page-title">
             <span className="material-icons xl">explore</span>
             Gestión de Tours
           </h1>
-          <p className="page-subtitle">
-            Administra tus tours, itinerarios y experiencias turísticas
-          </p>
         </div>
         <button
-          className="btn btn-primary create-btn"
+          className="tour-management-page__new-tour-btn"
           onClick={() => setIsModalOpen(true)}
         >
           <span className="material-icons">add_circle</span>
@@ -123,19 +204,29 @@ const TourManagement: React.FC = () => {
       </div>
 
       {/* Tours Section */}
-      <div className="tours-section">
-        <div className="section-header">
-          <h2 className="section-title">
-            <span className="material-icons">list</span>
-            Tours Disponibles
-          </h2>
-          <div className="section-actions">
-            <div className="search-box">
+      <div className="tour-management-page__tours-section">
+        <div className="tour-management-page__section-header">
+          <div className="tour-management-page__section-actions">
+            <div className="tour-management-page__category-filter">
+              <select
+                className="tour-management-page__category-select"
+                value={selectedCategory}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+              >
+                <option value="">Todas las categorías</option>
+                {tourCategories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="tour-management-page__search-box">
               <span className="material-icons">search</span>
               <input
                 type="text"
                 placeholder="Buscar tours..."
-                className="search-input"
+                className="tour-management-page__search-input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -144,47 +235,40 @@ const TourManagement: React.FC = () => {
         </div>
 
         {isLoading ? (
-          <div className="loading-state">
-            <div className="loading-spinner"></div>
+          <div className="tour-management-page__loading-state">
+            <div className="tour-management-page__loading-spinner"></div>
             <p>Cargando tours...</p>
           </div>
         ) : filteredTours.length === 0 ? (
-          <div className="empty-state">
+          <div className="tour-management-page__empty-state">
             <span className="material-icons">explore_off</span>
             <h3>No hay tours registrados</h3>
             <p>Crea tu primer tour para comenzar a ofrecer experiencias únicas</p>
-            <button
-              className="btn btn-primary"
-              onClick={() => setIsModalOpen(true)}
-            >
-              <span className="material-icons">add_circle</span>
-              Crear Primer Tour
-            </button>
           </div>
         ) : (
           <>
             {/* Desktop Grid View */}
-            <div className="tours-grid-desktop desktop-only">
+            <div className="tour-management-page__tours-grid-desktop tour-management-page__desktop-only">
               {/* Table Header */}
-              <div className="grid-header">
-                <div className="grid-cell">Tour</div>
-                <div className="grid-cell">Tipo</div>
-                <div className="grid-cell">Capacidad</div>
-                <div className="grid-cell">Precio/Hora</div>
-                <div className="grid-cell">Ubicación</div>
-                <div className="grid-cell">Estado</div>
-                <div className="grid-cell">Acciones</div>
+              <div className="tour-management-page__grid-header">
+                <div className="tour-management-page__grid-cell">Tour</div>
+                <div className="tour-management-page__grid-cell">Categoría</div>
+                <div className="tour-management-page__grid-cell">Capacidad</div>
+                <div className="tour-management-page__grid-cell">Precio/Persona</div>
+                <div className="tour-management-page__grid-cell">Ubicación</div>
+                <div className="tour-management-page__grid-cell">Estado</div>
+                <div className="tour-management-page__grid-cell">Acciones</div>
               </div>
 
               {/* Rows */}
               {filteredTours.map((tour) => (
-                <div key={tour.id} className="grid-row">
-                  <div className="grid-cell tour-cell">
-                    <div className="tour-info-grid">
-                      <div className="tour-thumbnail">
+                <div key={tour.id} className="tour-management-page__grid-row">
+                  <div className="tour-management-page__grid-cell tour-management-page__tour-cell">
+                    <div className="tour-management-page__tour-info-grid">
+                      <div className="tour-management-page__tour-thumbnail">
                         {tour.images && tour.images.length > 0 ? (
                           <img 
-                            src={`${url}/${tour.images[0].url}`} 
+                            src={tour.images[0].url} 
                             alt={tour.name}
                             onError={(e) => {
                               const target = e.currentTarget as HTMLImageElement;
@@ -202,43 +286,44 @@ const TourManagement: React.FC = () => {
                         </span>
                       </div>
                       <div>
-                        <div className="tour-name">{tour.name}</div>
-                        <div className="tour-details">{tour.description}</div>
+                        <div className="tour-management-page__tour-name">{tour.name}</div>
                       </div>
                     </div>
                   </div>
-                  <div className="grid-cell type-cell">
-                    {tour.tourType.name}
+                  <div className="tour-management-page__grid-cell tour-management-page__type-cell">
+                    {tour.tourCategory.name}
                   </div>
-                  <div className="grid-cell capacity-cell">
+                  <div className="tour-management-page__grid-cell tour-management-page__capacity-cell">
                     <span className="material-icons sm">group</span>
-                    {tour.capacity} personas
+                    {tour.pricing && tour.pricing.length > 0 ? `${tour.pricing[0].personas} personas` : 'N/A'}
                   </div>
-                  <div className="grid-cell price-cell">{formatPrice(tour.price)}</div>
-                  <div className="grid-cell location-cell">{tour.location}</div>
-                  <div className="grid-cell">
-                    <span className="availability-badge available">
+                  <div className="tour-management-page__grid-cell tour-management-page__price-cell">
+                    {tour.pricing && tour.pricing.length > 0 ? formatPrice(tour.pricing[0].precio) : 'N/A'}
+                  </div>
+                  <div className="tour-management-page__grid-cell tour-management-page__location-cell">{tour.location}</div>
+                  <div className="tour-management-page__grid-cell">
+                    <span className="tour-management-page__availability-badge available">
                       <span className="material-icons sm">check_circle</span>
                       Activo
                     </span>
                   </div>
-                  <div className="grid-cell actions-cell">
+                  <div className="tour-management-page__grid-cell tour-management-page__actions-cell">
                     <button
-                      className="action-btn"
+                      className="tour-management-page__action-btn"
                       title="Ver detalles"
                       onClick={() => navigate(`/tours/detalle/${tour.id}`)}
                     >
                       <span className="material-icons">visibility</span>
                     </button>
                     <button
-                      className="action-btn"
+                      className="tour-management-page__action-btn"
                       title="Editar"
                       onClick={() => handleEdit(tour)}
                     >
                       <span className="material-icons">edit</span>
                     </button>
                     <button
-                      className="action-btn danger"
+                      className="tour-management-page__action-btn danger"
                       title="Eliminar"
                       onClick={() => handleDelete(tour.id)}
                     >
@@ -250,13 +335,13 @@ const TourManagement: React.FC = () => {
             </div>
 
             {/* Mobile Cards View */}
-            <div className="tours-grid mobile-only">
+            <div className="tour-management-page__tours-grid tour-management-page__mobile-only">
               {filteredTours.map((tour) => (
-                <div key={tour.id} className="tour-card">
-                  <div className="card-image">
+                <div key={tour.id} className="tour-management-page__tour-card">
+                  <div className="tour-management-page__card-image">
                     {tour.images && tour.images.length > 0 ? (
                       <img 
-                        src={`${url}/${tour.images[0].url}`} 
+                        src={tour.images[0].url} 
                         alt={tour.name}
                         onError={(e) => {
                           const target = e.currentTarget as HTMLImageElement;
@@ -267,68 +352,68 @@ const TourManagement: React.FC = () => {
                       />
                     ) : null}
                     <div 
-                      className="tour-image-placeholder"
+                      className="tour-management-page__tour-image-placeholder"
                       style={{ display: tour.images && tour.images.length > 0 ? 'none' : 'flex' }}
                     >
                       <span className="material-icons">explore</span>
                     </div>
-                    <div className="availability-overlay available">
+                    <div className="tour-management-page__availability-overlay available">
                       <span className="material-icons">check_circle</span>
                       <span>{tour.status}</span>
                     </div>
                   </div>
 
-                  <div className="card-content">
-                    <div className="card-header">
-                      <h3 className="tour-name">{tour.name}</h3>
-                      <span className="tour-type">
-                        {tour.tourType.name}
+                  <div className="tour-management-page__card-content">
+                    <div className="tour-management-page__card-header">
+                      <h3 className="tour-management-page__tour-name">{tour.name}</h3>
+                      <span className="tour-management-page__tour-type">
+                        {tour.tourCategory.name}
                       </span>
                     </div>
 
-                    <div className="tour-specs">
-                      <div className="spec">
+                    <div className="tour-management-page__tour-specs">
+                      <div className="tour-management-page__spec">
                         <span className="material-icons sm">schedule</span>
-                        <span>Capacidad: {tour.capacity}</span>
+                        <span>Capacidad: {tour.pricing && tour.pricing.length > 0 ? tour.pricing[0].personas : 'N/A'}</span>
                       </div>
-                      <div className="spec">
+                      <div className="tour-management-page__spec">
                         <span className="material-icons sm">group</span>
-                        <span>{tour.capacity} personas</span>
+                        <span>{tour.pricing && tour.pricing.length > 0 ? `${tour.pricing[0].personas} personas` : 'N/A'}</span>
                       </div>
-                      <div className="spec">
+                      <div className="tour-management-page__spec">
                         <span className="material-icons sm">location_on</span>
                         <span>{tour.location}</span>
                       </div>
                     </div>
 
-                    <div className="price-info">
-                      <span className="price">{formatPrice(tour.price)}</span>
-                      <span className="price-period">/hora</span>
+                    <div className="tour-management-page__price-info">
+                      <span className="tour-management-page__price">{tour.pricing && tour.pricing.length > 0 ? formatPrice(tour.pricing[0].precio) : 'N/A'}</span>
+                      <span className="tour-management-page__price-period">/persona</span>
                     </div>
 
                     {tour.characteristics && tour.characteristics.length > 0 && (
-                      <div className="features-preview">
+                      <div className="tour-management-page__features-preview">
                         {tour.characteristics.slice(0, 3).map((characteristic) => (
-                          <span key={characteristic.id} className="feature-tag">
+                          <span key={characteristic.id} className="tour-management-page__feature-tag">
                             {characteristic.name}
                           </span>
                         ))}
                         {tour.characteristics.length > 3 && (
-                          <span className="feature-tag more">+{tour.characteristics.length - 3} más</span>
+                          <span className="tour-management-page__feature-tag more">+{tour.characteristics.length - 3} más</span>
                         )}
                       </div>
                     )}
 
-                    <div className="card-actions">
+                    <div className="tour-management-page__card-actions">
                       <button
-                        className="btn btn-secondary btn-sm"
+                        className="tour-management-page__btn tour-management-page__btn-secondary tour-management-page__btn-sm"
                         onClick={() => navigate(`/tours/detalle/${tour.id}`)}
                       >
                         <span className="material-icons sm">visibility</span>
                         Ver Detalles
                       </button>
                       <button
-                        className="btn btn-primary btn-sm"
+                        className="tour-management-page__btn tour-management-page__btn-primary tour-management-page__btn-sm"
                         onClick={() => handleEdit(tour)}
                       >
                         <span className="material-icons sm">edit</span>
