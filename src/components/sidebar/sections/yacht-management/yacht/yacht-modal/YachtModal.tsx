@@ -3,7 +3,6 @@ import { useDropzone } from 'react-dropzone';
 import { useYachtStore } from '../../../../../../zustand/yachtStore';
 import { useYachtCategoryStore } from '../../../../../../zustand/yachtCategoryStore';
 import { usePopupStore } from '../../../../../../zustand/popupStore';
-import { useStore } from '../../../../../../zustand/useStore';
 import APIs from '../../../../../../services/services/APIs';
 import './styles/YachtModal.css';
 

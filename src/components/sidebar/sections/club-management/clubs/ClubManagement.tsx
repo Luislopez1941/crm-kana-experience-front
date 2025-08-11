@@ -106,23 +106,14 @@ const ClubManagement: React.FC = () => {
     }
   };
 
-  const handleTypeChange = (typeId: string) => {
-    setSelectedType(typeId);
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedType = e.target.value;
+    setSelectedType(selectedType);
     
-    if (typeId === '') {
-      // Si no hay tipo seleccionado, mostrar todos los clubs
+    if (selectedType === '') {
       setFilteredClubs(clubs);
     } else {
-      // Filtrar por tipo seleccionado
-      fetchClubsByType(Number(typeId));
-    }
-  };
-
-  const reloadFilteredData = () => {
-    if (selectedType === '') {
-      fetchClubs();
-    } else {
-      fetchClubsByType(Number(selectedType));
+      fetchClubsByType(parseInt(selectedType));
     }
   };
 
@@ -209,7 +200,7 @@ const ClubManagement: React.FC = () => {
               <select
                 className="club-management-page__type-select"
                 value={selectedType}
-                onChange={(e) => handleTypeChange(e.target.value)}
+                onChange={handleTypeChange}
               >
                 <option value="">Todos los tipos</option>
                 {clubTypes.map((type) => (

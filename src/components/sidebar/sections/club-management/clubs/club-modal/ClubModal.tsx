@@ -27,7 +27,6 @@ interface ClubForm {
 const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess, editingClub }) => {
   const { showSuccess, showError } = usePopupStore();
 
-
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTypes, setIsLoadingTypes] = useState(false);
   const [isLoadingStates, setIsLoadingStates] = useState(false);
@@ -47,7 +46,6 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
   });
 
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [originalImages, setOriginalImages] = useState<any[]>([]);
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
 
   const [clubTypes, setClubTypes] = useState<any[]>([]);
@@ -128,14 +126,12 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
     if (editingClub) {
       // Handle images as array of objects or strings
       let images: string[] = [];
-      let originalImages: any[] = [];
       
       if (editingClub.images) {
         if (Array.isArray(editingClub.images)) {
           // Check if it's an array of objects with url property (from backend)
           if (editingClub.images.length > 0 && typeof editingClub.images[0] === 'object' && (editingClub.images[0] as any)?.url) {
-            // Keep the original objects for tracking IDs, but extract URLs for formData
-            originalImages = editingClub.images;
+            // Extract URLs for formData
             images = editingClub.images.map((img: any) => (img as any).url);
           } else {
             // It's already an array of strings (base64 or URLs)
@@ -157,7 +153,6 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
       });
 
       setImagePreviews(images);
-      setOriginalImages(originalImages);
       setDeletedImageIds([]);
 
       // Load related data
@@ -181,7 +176,6 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
         images: []
       });
       setImagePreviews([]);
-      setOriginalImages([]);
       setDeletedImageIds([]);
       setMunicipalities([]);
       setLocalities([]);
@@ -315,7 +309,6 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
       description: '',
       address: '',
       phone: '',
-      website: '',
       typeId: 0,
       stateId: 0,
       municipalityId: 0,
@@ -323,7 +316,6 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
       images: []
     });
     setImagePreviews([]);
-    setOriginalImages([]);
     setDeletedImageIds([]);
     setIsLoading(false);
     onClose();

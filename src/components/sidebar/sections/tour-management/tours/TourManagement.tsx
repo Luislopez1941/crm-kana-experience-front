@@ -112,23 +112,14 @@ const TourManagement: React.FC = () => {
     }
   };
 
-  const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategory(categoryId);
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCategory = e.target.value;
+    setSelectedCategory(selectedCategory);
     
-    if (categoryId === '') {
-      // Si no hay categoría seleccionada, mostrar todos los tours
+    if (selectedCategory === '') {
       setFilteredTours(tours);
     } else {
-      // Filtrar por categoría seleccionada
-      fetchToursByCategory(Number(categoryId));
-    }
-  };
-
-  const reloadFilteredData = () => {
-    if (selectedCategory === '') {
-      fetchTours();
-    } else {
-      fetchToursByCategory(Number(selectedCategory));
+      fetchToursByCategory(parseInt(selectedCategory));
     }
   };
 
@@ -183,6 +174,7 @@ const TourManagement: React.FC = () => {
     setIsModalOpen(false);
     setEditingTour(null);
   };
+  
 
   return (
     <div className="tour-management-page">
@@ -211,7 +203,7 @@ const TourManagement: React.FC = () => {
               <select
                 className="tour-management-page__category-select"
                 value={selectedCategory}
-                onChange={(e) => handleCategoryChange(e.target.value)}
+                onChange={handleCategoryChange}
               >
                 <option value="">Todas las categorías</option>
                 {tourCategories.map((category) => (

@@ -38,10 +38,26 @@ const APIs = {
   // Yacht Types
 
   getAllYachtType: async (customPath?: string) => {
-    const path = customPath || 'yacht-categories/get-all';
+    const path = customPath || 'yacht-types/get-all';
     return ConfigurationAPIs.get(path);
   },
 
+  createYachtType: async (data: any, customPath?: string) => {
+    const path = customPath || 'yacht-types/create';
+    return ConfigurationAPIs.post(path, data);
+  },
+
+  updateYachtType: async (id: number, data: any, customPath?: string) => {
+    const path = customPath || `yacht-types/update/${id}`;
+    return ConfigurationAPIs.patch(path, data);
+  },
+
+  deleteYachtType: async (id: number, customPath?: string) => {
+    const path = customPath || `yacht-types/delete/${id}`;
+    return ConfigurationAPIs.delete(path);
+  },
+
+  // Yacht Categories
   createYachtCategory: async (data: any, customPath?: string) => {
     const path = customPath || 'yacht-categories/create';
     return ConfigurationAPIs.post(path, data);
