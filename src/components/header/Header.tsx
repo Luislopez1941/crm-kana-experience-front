@@ -1,18 +1,24 @@
 import React from 'react';
-import { useStore } from '../../zustand/useStore';
 import useUserStore from '../../zustand/useUserStore';
 import './styles/Header.css';
 
 const Header: React.FC = () => {
-  const { toggleSidebar, theme, toggleTheme, logout } = useStore();
-  const { user } = useUserStore();
+  const { user, resetUser } = useUserStore();
+
+  const handleLogout = () => {
+    resetUser();
+    window.location.href = '/login';
+  };
 
   return (
     <header className="header">
       <div className="header-left">
         <button 
           className="mobile-menu-toggle"
-          onClick={toggleSidebar}
+          onClick={() => {
+            // TODO: Implement sidebar toggle functionality
+            console.log('Toggle sidebar clicked');
+          }}
         >
           <span className="material-icons">menu</span>
         </button>
@@ -36,10 +42,11 @@ const Header: React.FC = () => {
             <span className="notification-badge">3</span>
           </button>
 
-          <button className="header-action-btn" onClick={toggleTheme}>
-            <span className="material-icons">
-              {theme === 'light' ? 'dark_mode' : 'light_mode'}
-            </span>
+          <button className="header-action-btn" onClick={() => {
+            // TODO: Implement theme toggle functionality
+            console.log('Toggle theme clicked');
+          }}>
+            <span className="material-icons">light_mode</span>
           </button>
 
           <div className="header-divider"></div>
@@ -50,9 +57,9 @@ const Header: React.FC = () => {
             </div>
             <div className="user-info">
               <div className="user-name">{user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Usuario'}</div>
-              <div className="user-role">{user?.rol || 'Usuario'}</div>
+              <div className="user-role">{user?.role?.name || 'Usuario'}</div>
             </div>
-            <button className="user-menu-btn" onClick={logout} title="Cerrar Sesión">
+            <button className="user-menu-btn" onClick={handleLogout} title="Cerrar Sesión">
               <span className="material-icons">logout</span>
             </button>
           </div>

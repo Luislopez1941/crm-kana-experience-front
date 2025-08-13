@@ -95,7 +95,8 @@
   color: var(--text);
 }
 
-.tour-type-modal .form-group input {
+.tour-type-modal .form-group input,
+.tour-type-modal .form-group select {
   padding: var(--spacing-md);
   border: 2px solid var(--border);
   border-radius: var(--radius-md);
@@ -106,15 +107,34 @@
   outline: none;
 }
 
-.tour-type-modal .form-group input:focus {
+.tour-type-modal .form-group input:focus,
+.tour-type-modal .form-group select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-light);
 }
 
-.tour-type-modal .form-group input:disabled {
+.tour-type-modal .form-group input:disabled,
+.tour-type-modal .form-group select:disabled {
   background-color: var(--background-secondary);
   color: var(--text-muted);
   cursor: not-allowed;
+}
+
+.tour-type-modal .form-group input.error,
+.tour-type-modal .form-group select.error {
+  border-color: var(--error);
+}
+
+.tour-type-modal .form-group input.error:focus,
+.tour-type-modal .form-group select.error:focus {
+  box-shadow: 0 0 0 3px var(--error-light);
+}
+
+.tour-type-modal .form-error {
+  color: var(--error);
+  font-size: var(--font-size-sm);
+  margin: 0;
+  padding: 0;
 }
 
 /* Modal Actions */

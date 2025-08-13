@@ -5,6 +5,7 @@ import { useYachtCategoryStore } from '../../../../../zustand/yachtCategoryStore
 import YachtModal from './yacht-modal/YachtModal';
 import APIs from '../../../../../services/services/APIs';
 import './styles/YachtManagement.css';
+import useUserStore from '../../../../../zustand/useUserStore';
 
 
 const YachtManagement: React.FC = () => {
@@ -25,6 +26,18 @@ const YachtManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [filteredYachts, setFilteredYachts] = useState<any[]>([]);
+  const { user } = useUserStore();
+  
+  // Location filter states
+  const [selectedState, setSelectedState] = useState<number>(0);
+  const [selectedMunicipality, setSelectedMunicipality] = useState<number>(0);
+  const [selectedLocality, setSelectedLocality] = useState<number>(0);
+  const [states, setStates] = useState<any[]>([]);
+  const [municipalities, setMunicipalities] = useState<any[]>([]);
+  const [localities, setLocalities] = useState<any[]>([]);
+  const [isLoadingStates, setIsLoadingStates] = useState(false);
+  const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false);
+  const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-MX', {
@@ -44,10 +57,61 @@ const YachtManagement: React.FC = () => {
     }
   };
 
+  // Fetch states
+  const fetchStates = async () => {
+    setIsLoadingStates(true);
+    try {
+      const response: any = await APIs.getAllStates();
+      if (response.data) {
+        setStates(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching states:', error);
+    } finally {
+      setIsLoadingStates(false);
+    }
+  };
+
+  // Fetch municipalities
+  const fetchMunicipalities = async (stateId: number) => {
+    setIsLoadingMunicipalities(true);
+    try {
+      const response: any = await APIs.getMunicipalitiesByState(stateId);
+      if (response.data) {
+        setMunicipalities(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching municipalities:', error);
+    } finally {
+      setIsLoadingMunicipalities(false);
+    }
+  };
+
+  // Fetch localities
+  const fetchLocalities = async (municipalityId: number) => {
+    setIsLoadingLocalities(true);
+    try {
+      const response: any = await APIs.getLocalitiesByMunicipality(municipalityId);
+      if (response.data) {
+        setLocalities(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching localities:', error);
+    } finally {
+      setIsLoadingLocalities(false);
+    }
+  };
+
   const fetchYachts = async () => {
     setIsLoading(true);
+    let data = {
+      user: user.id,
+      state: 0,
+      municipality: 0,
+      locality: 0
+    }
     try {
-      const response: any = await APIs.getAllYachts();
+      const response: any = await APIs.getYachts(data);
       if (response?.data) {
         console.log('🔍 YACHTS DATA:', response.data);
         console.log('🔍 FIRST YACHT:', response.data[0]);
@@ -78,14 +142,75 @@ const YachtManagement: React.FC = () => {
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
+    applyFilters();
+  };
+
+  const handleStateChange = (stateId: number) => {
+    setSelectedState(stateId);
+    setSelectedMunicipality(0);
+    setSelectedLocality(0);
+    setMunicipalities([]);
+    setLocalities([]);
     
-    if (categoryId === '') {
-      // Si no hay categoría seleccionada, mostrar todos los yates
-      setFilteredYachts(yachts);
-    } else {
-      // Filtrar por categoría seleccionada
-      fetchYachtsByCategory(Number(categoryId));
+    if (stateId !== 0) {
+      fetchMunicipalities(stateId);
     }
+    
+    applyFilters();
+  };
+
+  const handleMunicipalityChange = (municipalityId: number) => {
+    setSelectedMunicipality(municipalityId);
+    setSelectedLocality(0);
+    setLocalities([]);
+    
+    if (municipalityId !== 0) {
+      fetchLocalities(municipalityId);
+    }
+    
+    applyFilters();
+  };
+
+  const handleLocalityChange = (localityId: number) => {
+    setSelectedLocality(localityId);
+    applyFilters();
+  };
+
+  const clearFilters = () => {
+    setSelectedCategory('');
+    setSelectedState(0);
+    setSelectedMunicipality(0);
+    setSelectedLocality(0);
+    setMunicipalities([]);
+    setMunicipalities([]);
+    setLocalities([]);
+    setFilteredYachts(yachts);
+  };
+
+  const applyFilters = () => {
+    let filtered = [...yachts];
+
+    // Filter by category
+    if (selectedCategory !== '') {
+      filtered = filtered.filter(yacht => yacht.yachtCategoryId === Number(selectedCategory));
+    }
+
+    // Filter by state
+    if (selectedState !== 0) {
+      filtered = filtered.filter(yacht => yacht.stateId === selectedState);
+    }
+
+    // Filter by municipality
+    if (selectedMunicipality !== 0) {
+      filtered = filtered.filter(yacht => yacht.municipalityId === selectedMunicipality);
+    }
+
+    // Filter by locality
+    if (selectedLocality !== 0) {
+      filtered = filtered.filter(yacht => yacht.localityId === selectedLocality);
+    }
+
+    setFilteredYachts(filtered);
   };
 
   const reloadFilteredData = () => {
@@ -99,6 +224,7 @@ const YachtManagement: React.FC = () => {
   useEffect(() => {
     fetchYachts();
     fetchYachtCategories();
+    fetchStates();
   }, []);
 
 
@@ -122,56 +248,120 @@ const YachtManagement: React.FC = () => {
 
 
   return (
-    <div className="yacht-management-page">
-      {/* Page Header */}
-      <div className="yacht-management-page__page-header">
-        <div className="yacht-management-page__header-content">
-          <h1 className="yacht-management-page__page-title">
-            <span className="material-icons xl">sailing</span>
-            Gestión de Yates
-          </h1>
-        </div>
-        <button
-          className="yacht-management-page__new-yacht-btn"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <span className="material-icons">add_circle</span>
-          Nuevo Yate
-        </button>
-      </div>
+         <div className="yacht-management-page">
+       {/* Yachts Section */}
+       <div className="yacht-management-page__yachts-section">
+         <div className="yacht-management-page__section-header">
+           <div className="yacht-management-page__section-actions">
+             <div className="yacht-management-page__category-filter">
+               <select
+                 className="yacht-management-page__category-select"
+                 value={selectedCategory}
+                 onChange={(e) => handleCategoryChange(e.target.value)}
+               >
+                 <option value="">Todas las categorías</option>
+                 {yachtCategories.map((category) => (
+                   <option key={category.id} value={category.id}>
+                     {category.name}
+                   </option>
+                 ))}
+               </select>
+             </div>
+             <div className="yacht-management-page__search-box">
+               <span className="material-icons">search</span>
+               <input
+                 type="text"
+                 placeholder="Buscar yates..."
+                 className="yacht-management-page__search-input"
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+               />
+             </div>
+             <button
+               className="yacht-management-page__new-yacht-btn"
+               onClick={() => setIsModalOpen(true)}
+             >
+               <span className="material-icons">add_circle</span>
+               Nuevo Yate
+             </button>
+           </div>
+         </div>
 
-      {/* Yachts Section */}
-      <div className="yacht-management-page__yachts-section">
-        <div className="yacht-management-page__section-header">
-          {/* <h2 className="yacht-management-page__section-title">
-            <span className="material-icons">list</span>
-            Flota Actual
-          </h2> */}
-          <div className="yacht-management-page__section-actions">
-            <div className="yacht-management-page__category-filter">
-              <select
-                className="yacht-management-page__category-select"
-                value={selectedCategory}
-                onChange={(e) => handleCategoryChange(e.target.value)}
-              >
-                <option value="">Todas las categorías</option>
-                {yachtCategories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="yacht-management-page__search-box">
-              <span className="material-icons">search</span>
-              <input
-                type="text"
-                placeholder="Buscar yates..."
-                className="yacht-management-page__search-input"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+        {/* Location Filters */}
+        <div className="yacht-management-page__filters-row">
+          <div className="yacht-management-page__filter-group">
+            <label className="yacht-management-page__filter-label">
+              <span className="material-icons">location_on</span>
+              Estado
+            </label>
+            <select
+              className="yacht-management-page__filter-select"
+              value={selectedState}
+              onChange={(e) => handleStateChange(Number(e.target.value))}
+              disabled={isLoadingStates}
+            >
+              <option value={0}>Seleccionar estado</option>
+              {states.map(state => (
+                <option key={state.id} value={state.id}>
+                  {state.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="yacht-management-page__filter-group">
+            <label className="yacht-management-page__filter-label">
+              <span className="material-icons">business</span>
+              Municipio
+            </label>
+            <select
+              className="yacht-management-page__filter-select"
+              value={selectedMunicipality}
+              onChange={(e) => handleMunicipalityChange(Number(e.target.value))}
+              disabled={isLoadingMunicipalities || selectedState === 0}
+            >
+              <option value={0}>
+                {selectedState === 0 ? 'Selecciona un estado primero' : 'Seleccionar municipio'}
+              </option>
+              {municipalities.map(municipality => (
+                <option key={municipality.id} value={municipality.id}>
+                  {municipality.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="yacht-management-page__filter-group">
+            <label className="yacht-management-page__filter-label">
+              <span className="material-icons">place</span>
+              Localidad
+            </label>
+            <select
+              className="yacht-management-page__filter-select"
+              value={selectedLocality}
+              onChange={(e) => handleLocalityChange(Number(e.target.value))}
+              disabled={isLoadingLocalities || selectedMunicipality === 0}
+            >
+              <option value={0}>
+                {selectedMunicipality === 0 ? 'Selecciona un municipio primero' : 'Seleccionar localidad'}
+              </option>
+              {localities.map(locality => (
+                <option key={locality.id} value={locality.id}>
+                  {locality.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="yacht-management-page__filter-actions">
+            <button
+              className="yacht-management-page__clear-filters-btn"
+              onClick={clearFilters}
+              disabled={selectedState === 0 && selectedMunicipality === 0 && selectedLocality === 0 && selectedCategory === ''}
+            >
+              <span className="material-icons">clear_all</span>
+              Limpiar Filtros
+            </button>
           </div>
         </div>
 
@@ -213,7 +403,7 @@ const YachtManagement: React.FC = () => {
                 <div key={yacht.id} className="yacht-management-page__grid-row">
                   <div className="yacht-management-page__grid-cell yacht-management-page__yacht-cell">
                     <div className="yacht-management-page__yacht-info-grid">
-                      <img src={yacht.images?.[0].url} alt={yacht.name} className="yacht-management-page__yacht-thumbnail" />
+                      <img src={yacht.images?.[0]?.url} alt={yacht.name} className="yacht-management-page__yacht-thumbnail" />
                       <div>
                         <div className="yacht-management-page__yacht-name">{yacht.name}</div>
                       </div>

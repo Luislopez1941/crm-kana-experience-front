@@ -17,6 +17,9 @@ export interface Yacht {
   pricing: PricingPackage[];
   status: string;
   yachtCategoryId: number;
+  stateId: number;
+  municipalityId: number;
+  localityId: number;
   yachtCategory?: {
     id: number;
     name: string;

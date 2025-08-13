@@ -4,6 +4,9 @@ export interface YachtType {
   id: number;
   name: string;
   yachts?: any[];
+  stateId: number;
+  municipalityId: number;
+  localityId: number;
   createdAt: string;
   updatedAt: string;
 }

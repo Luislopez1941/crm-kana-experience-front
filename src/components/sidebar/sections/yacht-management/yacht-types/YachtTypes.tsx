@@ -3,6 +3,22 @@ import { useYachtTypeStore } from '../../../../../zustand/yachtTypeStore';
 import YachtTypeModal from './yacht-type-modal/YachtTypeModal';
 import APIs from '../../../../../services/services/APIs';
 import './styles/YachtTypes.css';
+import useUserStore from '../../../../../zustand/useUserStore';
+
+interface State {
+  id: number;
+  name: string;
+}
+
+interface Municipality {
+  id: number;
+  name: string;
+}
+
+interface Locality {
+  id: number;
+  name: string;
+}
 
 const YachtTypes: React.FC = () => {
   const { 
@@ -13,25 +29,111 @@ const YachtTypes: React.FC = () => {
     setEditingType
   } = useYachtTypeStore();
 
-  // Calculate filtered yacht types locally
-  const filteredYachtTypes = yachtTypes.filter(type => {
-    return searchTerm === '' || 
-      type.name.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  // State variables
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedState, setSelectedState] = useState<number>(0);
+  const [selectedMunicipality, setSelectedMunicipality] = useState<number>(0);
+  const [selectedLocality, setSelectedLocality] = useState<number>(0);
+  const [states, setStates] = useState<State[]>([]);
+  const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
+  const [localities, setLocalities] = useState<Locality[]>([]);
+  const [isLoadingStates, setIsLoadingStates] = useState(false);
+  const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false);
+  const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
+  const { user } = useUserStore();
+
+  // Calculate filtered yacht types locally
+  const filteredYachtTypes = yachtTypes.filter(type => {
+    let matches = searchTerm === '' || 
+      type.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filter by state
+    if (selectedState > 0) {
+      matches = matches && type.stateId === selectedState;
+    }
+    
+    // Filter by municipality
+    if (selectedMunicipality > 0) {
+      matches = matches && type.municipalityId === selectedMunicipality;
+    }
+    
+    // Filter by locality
+    if (selectedLocality > 0) {
+      matches = matches && type.localityId === selectedLocality;
+    }
+    
+    return matches;
+  });
 
   const fetchYachtTypes = async () => {
     setIsLoading(true);
     try {
-      const response: any = await APIs.getAllYachtCategories();
+      const response: any = await APIs.getAllYachtCategories({user: user.id, state: 0, municipality: 0, locality: 0});
       if (response.data) {
         setYachtTypes(response.data);
       }
-    } catch (error) {
+    } catch (error) { 
       console.error('Error fetching yacht types:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchStates = async () => {
+    setIsLoadingStates(true);
+    try {
+      const response: any = await APIs.getAllStates();
+      if (response.success && response.data) {
+        setStates(response.data);
+      } else if (response.data) {
+        // Fallback: some APIs return data directly
+        setStates(response.data);
+      } else {
+        console.error('Invalid states response format:', response);
+      }
+    } catch (error) {
+      console.error('Error fetching states:', error);
+    } finally {
+      setIsLoadingStates(false);
+    }
+  };
+
+  const fetchMunicipalities = async (stateId: number) => {
+    setIsLoadingMunicipalities(true);
+    try {
+      const response: any = await APIs.getMunicipalitiesByState(stateId);
+      if (response.success && response.data) {
+        setMunicipalities(response.data);
+      } else if (response.data) {
+        // Fallback: some APIs return data directly
+        setMunicipalities(response.data);
+      } else {
+        console.error('Invalid municipalities response format:', response);
+      }
+    } catch (error) {
+      console.error('Error fetching municipalities:', error);
+    } finally {
+      setIsLoadingMunicipalities(false);
+    }
+  };
+
+  const fetchLocalities = async (municipalityId: number) => {
+    setIsLoadingLocalities(true);
+    try {
+      const response: any = await APIs.getLocalitiesByMunicipality(municipalityId);
+      if (response.success && response.data) {
+        setLocalities(response.data);
+      } else if (response.data) {
+        // Fallback: some APIs return data directly
+        setLocalities(response.data);
+      } else {
+        console.error('Invalid localities response format:', response);
+      }
+    } catch (error) {
+      console.error('Error fetching localities:', error);
+    } finally {
+      setIsLoadingLocalities(false);
     }
   };
 
@@ -39,7 +141,31 @@ const YachtTypes: React.FC = () => {
 
   useEffect(() => {
     fetchYachtTypes();
+    fetchStates();
   }, []);
+
+  useEffect(() => {
+    if (selectedState > 0) {
+      fetchMunicipalities(selectedState);
+      setSelectedMunicipality(0);
+      setSelectedLocality(0);
+    } else {
+      setMunicipalities([]);
+      setLocalities([]);
+      setSelectedMunicipality(0);
+      setSelectedLocality(0);
+    }
+  }, [selectedState]);
+
+  useEffect(() => {
+    if (selectedMunicipality > 0) {
+      fetchLocalities(selectedMunicipality);
+      setSelectedLocality(0);
+    } else {
+      setLocalities([]);
+      setSelectedLocality(0);
+    }
+  }, [selectedMunicipality]);
 
   const handleEdit = (type: any) => {
     setEditingType(type);
@@ -63,49 +189,140 @@ const YachtTypes: React.FC = () => {
     setEditingType(null);
   };
 
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const stateId = parseInt(e.target.value);
+    setSelectedState(stateId);
+  };
+
+  const handleMunicipalityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const municipalityId = parseInt(e.target.value);
+    setSelectedMunicipality(municipalityId);
+  };
+
+  const handleLocalityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const localityId = parseInt(e.target.value);
+    setSelectedLocality(localityId);
+  };
+
+  const clearFilters = () => {
+    setSelectedState(0);
+    setSelectedMunicipality(0);
+    setSelectedLocality(0);
+  };
+
 
   return (
     <div className="yacht-types-page">
-      {/* Page Header */}
-      <div className="page-header">
-        <div className="header-content">
-          <h1 className="page-title">
-            <span className="material-icons">category</span>
-            Categorías de Yates
-          </h1>
-          <p className="page-subtitle">
-            Administra las categorías de yates en tu flota
-          </p>
-        </div>
-        <button 
-          className="btn btn-primary create-btn"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <span className="material-icons">add_circle</span>
-          Nueva Categoría
-        </button>
-      </div>
-
-      {/* Statistics Cards */}
-    
-
       {/* Types Section */}
       <div className="types-section">
-        <div className="section-header">
-          <h2 className="section-title">
-            <span className="material-icons">list</span>
-            Categorías de Yates
-          </h2>
-          <div className="section-actions">
+        {/* Improved Filters Section */}
+        <div className="filters-section">
+          <div className="filters-header">
+            {/* Search Box - Left side */}
             <div className="search-box">
-              <span className="material-icons">search</span>
+              <span className="material-icons search-icon">search</span>
               <input
                 type="text"
-                placeholder="Buscar categorías de yates..."
+                placeholder="Buscar categorías por nombre..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
+                className="yacht-types-search-input"
               />
+              {searchTerm && (
+                <button 
+                  className="yacht-types-clear-search-btn"
+                  onClick={() => setSearchTerm('')}
+                  title="Limpiar búsqueda"
+                >
+                  <span className="material-icons">close</span>
+                </button>
+              )}
+            </div>
+            
+            {/* Create Button - Right side */}
+            <button 
+              className="btn btn-primary yacht-types-create-btn"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <span className="material-icons">add_circle</span>
+              Nueva Categoría
+            </button>
+          </div>
+          
+          <div className="filters-row">
+            <div className="filter-group">
+              <label className="filter-label">
+                <span className="material-icons">location_on</span>
+                Estado
+              </label>
+              <select
+                className="yacht-types-filter-select"
+                value={selectedState}
+                onChange={handleStateChange}
+                disabled={isLoadingStates}
+              >
+                <option value={0}>Seleccionar estado</option>
+                {states.map(state => (
+                  <option key={state.id} value={state.id}>
+                    {state.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">
+                <span className="material-icons">business</span>
+                Municipio
+              </label>
+              <select
+                className="yacht-types-filter-select"
+                value={selectedMunicipality}
+                onChange={handleMunicipalityChange}
+                disabled={isLoadingMunicipalities || selectedState === 0}
+              >
+                <option value={0}>
+                  {selectedState === 0 ? 'Selecciona un estado primero' : 'Seleccionar municipio'}
+                </option>
+                {municipalities.map(municipality => (
+                  <option key={municipality.id} value={municipality.id}>
+                    {municipality.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">
+                <span className="material-icons">place</span>
+                Localidad
+              </label>
+              <select
+                className="yacht-types-filter-select"
+                value={selectedLocality}
+                onChange={handleLocalityChange}
+                disabled={isLoadingLocalities || selectedMunicipality === 0}
+              >
+                <option value={0}>
+                  {selectedMunicipality === 0 ? 'Selecciona un municipio primero' : 'Seleccionar localidad'}
+                </option>
+                {localities.map(locality => (
+                  <option key={locality.id} value={locality.id}>
+                    {locality.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-actions">
+              <button
+                className="yacht-types-clear-filters-btn"
+                onClick={clearFilters}
+                disabled={selectedState === 0 && selectedMunicipality === 0 && selectedLocality === 0}
+              >
+                <span className="material-icons">clear_all</span>
+                Limpiar Filtros
+              </button>
             </div>
           </div>
         </div>
@@ -118,14 +335,33 @@ const YachtTypes: React.FC = () => {
         ) : filteredYachtTypes.length === 0 ? (
           <div className="empty-state">
             <span className="material-icons">category</span>
-            <h3>No hay categorías de yates</h3>
-            <p>Comienza creando tu primera categoría de yate</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => setIsModalOpen(true)}
-            >
-              Crear Primera Categoría
-            </button>
+            <h3>
+              {yachtTypes.length === 0 
+                ? 'No hay categorías de yates' 
+                : 'No se encontraron resultados'
+              }
+            </h3>
+            <p>
+              {yachtTypes.length === 0 
+                ? 'Comienza creando tu primera categoría de yate'
+                : 'No hay categorías que coincidan con los filtros aplicados'
+              }
+            </p>
+            {yachtTypes.length === 0 ? (
+              <button 
+                className="btn btn-primary"
+                onClick={() => setIsModalOpen(true)}
+              >
+                Crear Primera Categoría
+              </button>
+            ) : (
+              <button 
+                className="btn btn-secondary"
+                onClick={clearFilters}
+              >
+                Limpiar Filtros
+              </button>
+            )}
           </div>
                 ) : (
           <>

@@ -407,7 +407,7 @@
 /* Images Section */
 .yacht-modal__images-section {
   display: flex;
-  flex-direction: column;
+    flex-direction: column;
   gap: var(--spacing-lg);
 }
 
@@ -802,7 +802,7 @@
     flex-direction: column;
     align-items: stretch;
   }
-
+  
   .yacht-modal__footer-actions {
     flex-direction: column;
   }

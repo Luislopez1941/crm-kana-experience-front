@@ -42,5 +42,21 @@
       { "id": "clubs", "label": "Clubs", "icon": "nightlife", "path": "/clubs" },
       { "id": "club-types", "label": "Categorías de Club", "icon": "category", "path": "/clubs/club-types" }
     ]
+  },
+  {
+    "id": "users",
+    "label": "Gestión de Usuarios",
+    "icon": "person",
+    "children": [
+      { "id": "users", "label": "Usuarios", "icon": "person", "path": "/users" }
+    ]
+  },
+  {
+    "id": "locations",
+    "label": "Ubicaciones",
+    "icon": "location_on",
+    "children": [
+      { "id": "locations", "label": "Ubicaciones", "icon": "location_on", "path": "/locations" }
+    ]
   }
 ]

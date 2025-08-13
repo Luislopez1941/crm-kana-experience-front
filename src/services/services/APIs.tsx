@@ -13,9 +13,9 @@ const APIs = {
     return ConfigurationAPIs.post(path, data);
   },
 
-  getAllYachts: async (customPath?: string) => {
-    const path = customPath || 'yachts/get-all';
-    return ConfigurationAPIs.get(path);
+  getYachts: async (data: any, customPath?: string) => {
+    const path = customPath || 'yachts/get-yacht-by-ids';
+    return ConfigurationAPIs.post(path, data);
   },
 
 
@@ -38,12 +38,12 @@ const APIs = {
   // Yacht Types
 
   getAllYachtType: async (customPath?: string) => {
-    const path = customPath || 'yacht-types/get-all';
+    const path = customPath || 'yacht-categories/get-all';
     return ConfigurationAPIs.get(path);
   },
 
   createYachtType: async (data: any, customPath?: string) => {
-    const path = customPath || 'yacht-types/create';
+    const path = customPath || 'yacht-categories/create';
     return ConfigurationAPIs.post(path, data);
   },
 
@@ -63,9 +63,9 @@ const APIs = {
     return ConfigurationAPIs.post(path, data);
   },
 
-  getAllYachtCategories: async (customPath?: string) => {
-    const path = customPath || 'yacht-categories/get-all';
-    return ConfigurationAPIs.get(path);
+  getAllYachtCategories: async (data: any, customPath?: string) => {
+    const path = customPath || 'yacht-categories/get-yacht-categories-by-ids';
+    return ConfigurationAPIs.post(path, data);
   },
 
   updateYachtCategory: async (id: number, data: any, customPath?: string) => {
@@ -172,9 +172,61 @@ const APIs = {
   },
 
   // Localities
+  getLocalities: async (data: any, customPath?: string) => {
+    const path = customPath || 'localities/get-by-ids';
+    return ConfigurationAPIs.post(path, data);
+  },
+
   getLocalitiesByMunicipality: async (municipalityId: number, customPath?: string) => {
     const path = customPath || `localities/by-municipality/${municipalityId}`;
     return ConfigurationAPIs.get(path);
+  },
+
+  // User Management
+  getAllUsers: async (customPath?: string) => {
+    const path = customPath || 'users/get-all';
+    return ConfigurationAPIs.get(path);
+  },
+
+  createUser: async (data: any, customPath?: string) => {
+    const path = customPath || 'users/create';
+    return ConfigurationAPIs.post(path, data);
+  },
+
+  updateUser: async (id: number, data: any, customPath?: string) => {
+    const path = customPath || `users/update/${id}`;
+    return ConfigurationAPIs.patch(path, data);
+  },
+
+  deleteUser: async (id: number, customPath?: string) => {
+    const path = customPath || `users/delete/${id}`;
+    return ConfigurationAPIs.delete(path);
+  },
+
+  getUsersByRole: async (roleId: number, customPath?: string) => {
+    const path = customPath || `users/by-role/${roleId}`;
+    return ConfigurationAPIs.get(path);
+  },
+
+  // Role Management
+  getAllRoles: async (customPath?: string) => {
+    const path = customPath || 'roles/get-all';
+    return ConfigurationAPIs.get(path);
+  },
+
+  createRole: async (data: any, customPath?: string) => {
+    const path = customPath || 'roles/create';
+    return ConfigurationAPIs.post(path, data);
+  },
+
+  updateRole: async (id: number, data: any, customPath?: string) => {
+    const path = customPath || `roles/update/${id}`;
+    return ConfigurationAPIs.patch(path, data);
+  },
+
+  deleteRole: async (id: number, customPath?: string) => {
+    const path = customPath || `roles/delete/${id}`;
+    return ConfigurationAPIs.delete(path);
   },
 
 }

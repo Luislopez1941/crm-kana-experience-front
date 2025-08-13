@@ -1,0 +1,537 @@
+/* User Management Page */
+.user-management-page {
+  padding: var(--spacing-xl);
+  background: var(--background);
+  min-height: 100vh;
+  font-family: var(--font-family);
+}
+
+/* Page Header */
+.user-management-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-2xl);
+  gap: var(--spacing-xl);
+}
+
+.user-management-page__title-section {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.user-management-page__title-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--info), var(--info-dark));
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(var(--info-rgb), 0.3);
+}
+
+.user-management-page__title-icon .material-icons {
+  font-size: 2rem;
+  color: white;
+}
+
+.user-management-page__title-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.user-management-page__title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.user-management-page__subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.user-management-page__create-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: var(--info);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(var(--info-rgb), 0.3);
+}
+
+.user-management-page__create-btn:hover {
+  background: var(--info-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(var(--info-rgb), 0.4);
+}
+
+.user-management-page__create-btn .material-icons {
+  font-size: 1.25rem;
+}
+
+/* Section Actions */
+.user-management-page__section-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-lg);
+}
+
+.user-management-page__filters {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.user-management-page__role-filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.user-management-page__role-filter label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text);
+}
+
+.user-management-page__role-select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--text);
+  font-size: var(--font-size-sm);
+  min-width: 200px;
+  transition: all 0.3s ease;
+}
+
+.user-management-page__role-select:focus {
+  outline: none;
+  border-color: var(--info);
+  box-shadow: 0 0 0 3px rgba(var(--info-rgb), 0.1);
+}
+
+.user-management-page__search {
+  flex: 1;
+  max-width: 400px;
+}
+
+.user-management-page__search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.user-management-page__search-icon {
+  position: absolute;
+  left: var(--spacing-md);
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  pointer-events: none;
+}
+
+.user-management-page__search-input {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) calc(var(--spacing-md) * 2 + 1.25rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+  color: var(--text);
+  font-size: var(--font-size-base);
+  transition: all 0.3s ease;
+}
+
+.user-management-page__search-input:focus {
+  outline: none;
+  border-color: var(--info);
+  box-shadow: 0 0 0 3px rgba(var(--info-rgb), 0.1);
+}
+
+.user-management-page__search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Content */
+.user-management-page__content {
+  min-height: 400px;
+}
+
+/* Loading State */
+.user-management-page__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  color: var(--text-secondary);
+}
+
+.user-management-page__loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border);
+  border-top: 4px solid var(--info);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--spacing-lg);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.user-management-page__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.user-management-page__empty-icon {
+  width: 80px;
+  height: 80px;
+  background: var(--background-secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.user-management-page__empty-icon .material-icons {
+  font-size: 2.5rem;
+  color: var(--text-muted);
+}
+
+.user-management-page__empty-state h3 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.user-management-page__empty-state p {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-lg) 0;
+  line-height: 1.5;
+}
+
+.user-management-page__first-user-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--info);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.user-management-page__first-user-btn:hover {
+  background: var(--info-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(var(--info-rgb), 0.3);
+}
+
+/* Users Grid */
+.user-management-page__users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* User Card */
+.user-management-page__user-card {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.user-management-page__user-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--info), var(--success));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.user-management-page__user-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px var(--shadow);
+  border-color: var(--info);
+}
+
+.user-management-page__user-card:hover::before {
+  opacity: 1;
+}
+
+.user-management-page__user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-lg);
+}
+
+.user-management-page__user-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--background-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.user-management-page__user-card:hover .user-management-page__user-avatar {
+  border-color: var(--info);
+  transform: scale(1.05);
+}
+
+.user-management-page__user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-management-page__user-avatar .material-icons {
+  font-size: 2rem;
+  color: var(--text-muted);
+}
+
+.user-management-page__user-status {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.user-management-page__status-badge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.user-management-page__status-badge--super_admin {
+  background: rgba(var(--error-rgb), 0.1);
+  color: var(--error);
+}
+
+.user-management-page__status-badge--admin {
+  background: rgba(var(--warning-rgb), 0.1);
+  color: var(--warning);
+}
+
+.user-management-page__status-badge--user {
+  background: rgba(var(--success-rgb), 0.1);
+  color: var(--success);
+}
+
+/* User Info */
+.user-management-page__user-info {
+  margin-bottom: var(--spacing-lg);
+}
+
+.user-management-page__user-name {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  margin: 0 0 var(--spacing-sm) 0;
+  line-height: 1.3;
+}
+
+.user-management-page__user-email {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-xs) 0;
+  word-break: break-all;
+}
+
+.user-management-page__user-role {
+  font-size: var(--font-size-sm);
+  color: var(--info);
+  font-weight: var(--font-weight-medium);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.user-management-page__user-phone,
+.user-management-page__user-parent {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.user-management-page__user-phone .material-icons,
+.user-management-page__user-parent .material-icons {
+  font-size: 0.875rem;
+}
+
+/* User Actions */
+.user-management-page__user-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+}
+
+.user-management-page__action-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+}
+
+.user-management-page__action-btn--edit {
+  background: var(--warning);
+}
+
+.user-management-page__action-btn--edit:hover {
+  background: var(--warning-dark);
+  transform: scale(1.1);
+}
+
+.user-management-page__action-btn--delete {
+  background: var(--error);
+}
+
+.user-management-page__action-btn--delete:hover {
+  background: var(--error-dark);
+  transform: scale(1.1);
+}
+
+.user-management-page__action-btn .material-icons {
+  font-size: 1.125rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .user-management-page__users-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .user-management-page {
+    padding: var(--spacing-lg);
+  }
+  
+  .user-management-page__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+  }
+  
+  .user-management-page__title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .user-management-page__section-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+  
+  .user-management-page__search {
+    max-width: none;
+  }
+  
+  .user-management-page__users-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .user-management-page__user-card {
+    padding: var(--spacing-md);
+  }
+  
+  .user-management-page__user-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+  
+  .user-management-page__user-status {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-management-page__title-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .user-management-page__title-icon .material-icons {
+    font-size: 1.5rem;
+  }
+  
+  .user-management-page__title {
+    font-size: var(--font-size-xl);
+  }
+  
+  .user-management-page__subtitle {
+    font-size: var(--font-size-base);
+  }
+  
+  .user-management-page__create-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .user-management-page__user-avatar {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .user-management-page__user-avatar .material-icons {
+    font-size: 1.5rem;
+  }
+  
+  .user-management-page__user-name {
+    font-size: var(--font-size-base);
+  }
+}

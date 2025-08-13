@@ -36,8 +36,9 @@ const Login: React.FC = () => {
       const res: any = await APIs.login(formData);
       console.log('Respuesta del login:', res);
       
-      getUser({ ...res.user, rol: 'SUPER_ADMIN' });
-      toast.success(res.message || 'Inicio de sesión exitoso');
+      // Call getUser with the complete login response
+      getUser(res.data);
+      toast.success(res.data.message || 'Inicio de sesión exitoso');
       
       console.log('Redirigiendo a /');
       navigate('/');

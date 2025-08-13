@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { useYachtStore } from '../../../../../../zustand/yachtStore';
 import { useYachtCategoryStore } from '../../../../../../zustand/yachtCategoryStore';
 import { usePopupStore } from '../../../../../../zustand/popupStore';
+import useUserStore from '../../../../../../zustand/useUserStore';
 import APIs from '../../../../../../services/services/APIs';
 import './styles/YachtModal.css';
 
@@ -28,23 +29,23 @@ interface YachtForm {
   pricing: PricingPackage[];
   status: string;
   yachtCategoryId: number;
+  stateId: number;
+  municipalityId: number;
+  localityId: number;
 }
 
 const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { editingYacht } = useYachtStore();
   const { yachtCategories, setYachtCategories } = useYachtCategoryStore();
   const { showSuccess, showError } = usePopupStore();
+  const { user } = useUserStore();
+  
+  // Debug: Log user data
+  console.log('🔍 YachtModal - User data:', user);
+  console.log('🔍 YachtModal - User ID:', user?.id);
+  console.log('🔍 YachtModal - User role:', user?.role?.name);
 
-
-  // Fetch yacht categories when modal opens
-  const fetchYachtCategories = async () => {
-    try {
-      const response: any = await APIs.getAllYachtType();
-      setYachtCategories(response.data);
-    } catch (error) {
-      console.error('Error fetching yacht categories:', error);
-    }
-  };
+  // State declarations
   const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState<YachtForm>({
@@ -57,14 +58,78 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
     features: '',
     pricing: [{ hours: null, price: null }],
     status: 'Activo',
-    yachtCategoryId: 0
+    yachtCategoryId: 0,
+    stateId: 0,
+    municipalityId: 0,
+    localityId: 0
   });
 
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [originalImages, setOriginalImages] = useState<any[]>([]);
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
   const [newCharacteristic, setNewCharacteristic] = useState<string>('');
+  const [states, setStates] = useState<any[]>([]);
+  const [municipalities, setMunicipalities] = useState<any[]>([]);
+  const [localities, setLocalities] = useState<any[]>([]);
+  const [isLoadingStates, setIsLoadingStates] = useState(false);
+  const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false);
+  const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
   const [newPricingPackage, setNewPricingPackage] = useState<PricingPackage>({ hours: null, price: null });
+
+  // Fetch yacht categories when modal opens
+  const fetchYachtCategories = async () => {
+    try {
+      const response: any = await APIs.getAllYachtCategories({user: user.id, state: 0, municipality: 0, locality: 0});
+      setYachtCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching yacht categories:', error);
+    }
+  };
+
+  // Fetch states
+  const fetchStates = async () => {
+    setIsLoadingStates(true);
+    try {
+      const response: any = await APIs.getAllStates();
+      if (response.data) {
+        setStates(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching states:', error);
+    } finally {
+      setIsLoadingStates(false);
+    }
+  };
+
+  // Fetch municipalities
+  const fetchMunicipalities = async (stateId: number) => {
+    setIsLoadingMunicipalities(true);
+    try {
+      const response: any = await APIs.getMunicipalitiesByState(stateId);
+      if (response.data) {
+        setMunicipalities(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching municipalities:', error);
+    } finally {
+      setIsLoadingMunicipalities(false);
+    }
+  };
+
+  // Fetch localities
+  const fetchLocalities = async (municipalityId: number) => {
+    setIsLoadingLocalities(true);
+    try {
+      const response: any = await APIs.getLocalitiesByMunicipality(municipalityId);
+      if (response.data) {
+        setLocalities(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching localities:', error);
+    } finally {
+      setIsLoadingLocalities(false);
+    }
+  };
 
   // Dropzone configuration for multiple images
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -95,21 +160,37 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
     maxSize: 5 * 1024 * 1024 // 5MB per image
   });
 
-  const locations = [
-    'Marina Valencia',
-    'Puerto Banús',
-    'Marina Ibiza',
-    'Marina Barcelona',
-    'Puerto José Banús',
-    'Marina Palma',
-    'Puerto de Sóller'
-  ];
 
   useEffect(() => {
     if (isOpen) {
       fetchYachtCategories();
+      fetchStates();
     }
   }, [isOpen]);
+
+  // Handle state change
+  useEffect(() => {
+    if (formData.stateId && formData.stateId !== 0) {
+      fetchMunicipalities(formData.stateId);
+      setFormData(prev => ({
+        ...prev,
+        municipalityId: 0,
+        localityId: 0
+      }));
+      setLocalities([]);
+    }
+  }, [formData.stateId]);
+
+  // Handle municipality change
+  useEffect(() => {
+    if (formData.municipalityId && formData.municipalityId !== 0) {
+      fetchLocalities(formData.municipalityId);
+      setFormData(prev => ({
+        ...prev,
+        localityId: 0
+      }));
+    }
+  }, [formData.municipalityId]);
 
   useEffect(() => {
     if (editingYacht) {
@@ -141,18 +222,15 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
       
                                 // Handle pricing
       let pricing: PricingPackage[] = [{ hours: null, price: null }];
-      if (editingYacht.pricing) {
-        if (Array.isArray(editingYacht.pricing)) {
+          if (editingYacht.pricing) {
+            if (Array.isArray(editingYacht.pricing)) {
           pricing = editingYacht.pricing as unknown as PricingPackage[];
-        } else if ((editingYacht as any).capacity && (editingYacht as any).pricePerDay) {
-          // Fallback to old single price structure
+            } else if ((editingYacht as any).capacity && (editingYacht as any).pricePerDay) {
+              // Fallback to old single price structure
           pricing = [{ hours: (editingYacht as any).capacity, price: (editingYacht as any).pricePerDay }];
-        }
-      }
-      
-      console.log('🔄 Setting formData with images:', images);
-      console.log('🔄 Images type:', typeof images);
-      console.log('🔄 Images length:', images.length);
+            }
+          }
+
              setFormData({
          name: editingYacht.name,
          capacity: editingYacht.capacity || 1,
@@ -163,7 +241,10 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
          features: features,
          pricing: pricing,
          status: editingYacht.status || 'Activo',
-         yachtCategoryId: editingYacht.yachtCategoryId || 0
+         yachtCategoryId: editingYacht.yachtCategoryId || 0,
+         stateId: editingYacht.stateId || 0,
+         municipalityId: editingYacht.municipalityId || 0,
+         localityId: editingYacht.localityId || 0
        });
       console.log('🔄 Setting imagePreviews with:', images);
       setImagePreviews(images);
@@ -180,7 +261,10 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
          features: '',
          pricing: [{ hours: null, price: null }],
          status: 'Activo',
-         yachtCategoryId: 0
+         yachtCategoryId: 0,
+         stateId: 0,
+         municipalityId: 0,
+         localityId: 0
        });
        setImagePreviews([]);
      }
@@ -234,10 +318,23 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate user is available
+    if (!user?.id) {
+      showError('Usuario no autenticado. Por favor, inicia sesión nuevamente.');
+      return;
+    }
+    
     const dataToSend: any = {
       ...formData,
-      images: imagePreviews
+      images: imagePreviews,
+      userId: user.id, // Add userId to the data
+      typeUser: user.role?.name // Add typeUser to the data
     };
+
+    // Log the data being sent for debugging
+    console.log('🚢 Data being sent to API:', dataToSend);
+    console.log('👤 User ID (userId):', user.id);
+    console.log('👤 User role (typeUser):', user.role?.name);
 
     // Add delete_images for updates
     if (editingYacht && deletedImageIds.length > 0) {
@@ -248,7 +345,7 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
     
     try {
       // Validate required fields
-             if (!formData.name || !formData.description || !formData.yachtCategoryId || !formData.location) {
+             if (!formData.name || !formData.description || !formData.yachtCategoryId || !formData.stateId || !formData.municipalityId || !formData.localityId) {
         showError('Por favor completa todos los campos requeridos');
         return;
       }
@@ -310,7 +407,10 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
       features: '',
       pricing: [{ hours: null, price: null }],
       status: 'Activo',
-      yachtCategoryId: 0
+      yachtCategoryId: 0,
+      stateId: 0,
+      municipalityId: 0,
+      localityId: 0
     });
     setImagePreviews([]);
     setOriginalImages([]);
@@ -330,10 +430,10 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
         <div className="yacht-modal__header">
           <div className="yacht-modal__title">
             <div className="yacht-modal__title-icon">
-              <span className="material-icons">sailing</span>
+            <span className="material-icons">sailing</span>
             </div>
             <div className="yacht-modal__title-content">
-              <h2>{editingYacht ? 'Editar Yate' : 'Nuevo Yate'}</h2>
+            <h2>{editingYacht ? 'Editar Yate' : 'Nuevo Yate'}</h2>
               <p>Gestiona la información de tu yate para la flota</p>
             </div>
           </div>
@@ -354,39 +454,39 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
               
               <div className="yacht-modal__form-grid">
                 <div className="yacht-modal__form-group">
-                  <label htmlFor="name">Nombre del Yate *</label>
+                 <label htmlFor="name">Nombre del Yate *</label>
                   <div className="yacht-modal__input-wrapper">
                     <span className="yacht-modal__input-icon material-icons">sailing</span>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="Ej: Ocean Paradise"
-                      required
-                      disabled={isLoading}
-                    />
+                 <input
+                   type="text"
+                   id="name"
+                   name="name"
+                   value={formData.name}
+                   onChange={handleInputChange}
+                   placeholder="Ej: Ocean Paradise"
+                   required
+                   disabled={isLoading}
+                 />
                   </div>
-                </div>
+               </div>
 
                 <div className="yacht-modal__form-group">
-                  <label htmlFor="yachtCategoryId">Categoría *</label>
+                                     <label htmlFor="yachtCategoryId">Categoría *</label>
                   <div className="yacht-modal__input-wrapper">
                     <span className="yacht-modal__input-icon material-icons">category</span>
-                    <select
-                      id="yachtCategoryId"
-                      name="yachtCategoryId"
-                      value={formData.yachtCategoryId}
-                      onChange={handleInputChange}
-                      required
-                      disabled={isLoading}
-                    >
-                      <option value={0}>Seleccionar categoría</option>
-                      {yachtCategories.map(category => (
-                        <option key={category.id} value={category.id}>{category.name}</option>
-                      ))}
-                    </select>
+                  <select
+                    id="yachtCategoryId"
+                    name="yachtCategoryId"
+                    value={formData.yachtCategoryId}
+                    onChange={handleInputChange}
+                    required
+                    disabled={isLoading}
+                  >
+                    <option value={0}>Seleccionar categoría</option>
+                    {yachtCategories.map(category => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
                   </div>
                 </div>
 
@@ -394,17 +494,17 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                   <label htmlFor="capacity">Capacidad *</label>
                   <div className="yacht-modal__input-wrapper">
                     <span className="yacht-modal__input-icon material-icons">group</span>
-                    <input
-                      type="number"
-                      id="capacity"
-                      name="capacity"
-                      value={formData.capacity}
-                      onChange={handleInputChange}
-                      placeholder="Ej: 8"
-                      min="1"
-                      required
-                      disabled={isLoading}
-                    />
+                  <input
+                    type="number"
+                    id="capacity"
+                    name="capacity"
+                    value={formData.capacity}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 8"
+                    min="1"
+                    required
+                    disabled={isLoading}
+                  />
                     <span className="yacht-modal__input-suffix">personas</span>
                   </div>
                 </div>
@@ -427,22 +527,86 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                 </div>
 
                 <div className="yacht-modal__form-group">
-                  <label htmlFor="location">Ubicación *</label>
+                  <label htmlFor="stateId">Estado *</label>
                   <div className="yacht-modal__input-wrapper">
                     <span className="yacht-modal__input-icon material-icons">location_on</span>
                     <select
+                      id="stateId"
+                      name="stateId"
+                      value={formData.stateId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading || isLoadingStates}
+                    >
+                      <option value="">
+                        {isLoadingStates ? 'Cargando estados...' : 'Seleccionar estado'}
+                      </option>
+                      {states.map(state => (
+                        <option key={state.id} value={state.id}>{state.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="yacht-modal__form-group">
+                  <label htmlFor="municipalityId">Municipio *</label>
+                  <div className="yacht-modal__input-wrapper">
+                    <span className="yacht-modal__input-icon material-icons">location_city</span>
+                    <select
+                      id="municipalityId"
+                      name="municipalityId"
+                      value={formData.municipalityId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading || isLoadingMunicipalities || !formData.stateId}
+                    >
+                      <option value="">
+                        {isLoadingMunicipalities ? 'Cargando municipios...' : 
+                         !formData.stateId ? 'Selecciona un estado primero' : 'Seleccionar municipio'}
+                      </option>
+                      {municipalities.map(municipality => (
+                        <option key={municipality.id} value={municipality.id}>{municipality.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="yacht-modal__form-group">
+                  <label htmlFor="localityId">Localidad *</label>
+                  <div className="yacht-modal__input-wrapper">
+                    <span className="yacht-modal__input-icon material-icons">location_on</span>
+                    <select
+                      id="localityId"
+                      name="localityId"
+                      value={formData.localityId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading || isLoadingLocalities || !formData.municipalityId}
+                    >
+                      <option value="">
+                        {isLoadingLocalities ? 'Cargando localidades...' : 
+                         !formData.municipalityId ? 'Selecciona un municipio primero' : 'Seleccionar localidad'}
+                      </option>
+                      {localities.map(locality => (
+                        <option key={locality.id} value={locality.id}>{locality.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="yacht-modal__form-group">
+                  <label htmlFor="location">Ubicación Específica</label>
+                  <div className="yacht-modal__input-wrapper">
+                    <span className="yacht-modal__input-icon material-icons">business</span>
+                    <input
+                      type="text"
                       id="location"
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
-                      required
+                      placeholder="Ej: Marina Cancún, Puerto Juárez"
                       disabled={isLoading}
-                    >
-                      <option value="">Seleccionar ubicación</option>
-                      {locations.map(location => (
-                        <option key={location} value={location}>{location}</option>
-                      ))}
-                    </select>
+                    />
                   </div>
                 </div>
 
@@ -472,25 +636,25 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                 <span className="material-icons">attach_money</span>
                 <h3>Precios por Horas</h3>
                 <p>Define los paquetes de precios para diferentes duraciones</p>
-              </div>
-              
+                </div>
+
               <div className="yacht-modal__pricing-input-container">
                 <div className="yacht-modal__pricing-input-row">
                   <div className="yacht-modal__pricing-input-group">
                     <label>Horas</label>
                     <div className="yacht-modal__input-wrapper">
                       <span className="yacht-modal__input-icon material-icons">schedule</span>
-                      <input
-                        type="number"
+                    <input
+                      type="number"
                         value={newPricingPackage.hours || ''}
-                        onChange={(e) => setNewPricingPackage(prev => ({ 
-                          ...prev, 
+                      onChange={(e) => setNewPricingPackage(prev => ({ 
+                        ...prev, 
                           hours: e.target.value === '' ? null : Number(e.target.value) 
-                        }))}
-                        placeholder="Horas"
-                        min="1"
-                        disabled={isLoading}
-                      />
+                      }))}
+                      placeholder="Horas"
+                      min="1"
+                      disabled={isLoading}
+                    />
                     </div>
                   </div>
                   
@@ -498,61 +662,61 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                     <label>Precio (MXN)</label>
                     <div className="yacht-modal__input-wrapper">
                       <span className="yacht-modal__input-icon material-icons">payments</span>
-                      <input
-                        type="number"
+                    <input
+                      type="number"
                         value={newPricingPackage.price || ''}
-                        onChange={(e) => setNewPricingPackage(prev => ({ 
-                          ...prev, 
+                      onChange={(e) => setNewPricingPackage(prev => ({ 
+                        ...prev, 
                           price: e.target.value === '' ? null : Number(e.target.value) 
-                        }))}
+                      }))}
                         placeholder="Precio"
-                        min="1"
-                        disabled={isLoading}
-                      />
+                      min="1"
+                      disabled={isLoading}
+                    />
                     </div>
                   </div>
                   
-                  <button
-                    type="button"
+                                       <button
+                      type="button"
                     className="yacht-modal__add-pricing-btn"
-                    onClick={addPricingPackage}
+                      onClick={addPricingPackage}
                     disabled={isLoading || !newPricingPackage.hours || !newPricingPackage.price || newPricingPackage.hours <= 0 || newPricingPackage.price <= 0}
-                  >
-                    <span className="material-icons">add</span>
+                    >
+                     <span className="material-icons">add</span>
                     Agregar
-                  </button>
-                </div>
+                   </button>
+                 </div>
                 
-                {formData.pricing.length > 0 && (
+                 {formData.pricing.length > 0 && (
                   <div className="yacht-modal__pricing-packages-grid">
-                    {formData.pricing.map((pkg, index) => (
+                     {formData.pricing.map((pkg, index) => (
                       <div key={index} className="yacht-modal__pricing-package-card">
                         <div className="yacht-modal__package-content">
                           <div className="yacht-modal__package-hours">
                             <span className="material-icons">schedule</span>
                             <span className="yacht-modal__hours-value">{pkg.hours || 0}</span>
                             <span className="yacht-modal__hours-label">horas</span>
-                          </div>
+                           </div>
                           <div className="yacht-modal__package-price">
                             <span className="yacht-modal__price-currency">$</span>
                             <span className="yacht-modal__price-value">{pkg.price || 0}</span>
                             <span className="yacht-modal__price-label">MXN</span>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
+                           </div>
+                         </div>
+                         <button
+                           type="button"
                           className="yacht-modal__remove-package-btn"
-                          onClick={() => removePricingPackage(index)}
-                          disabled={isLoading}
-                        >
-                          <span className="material-icons">close</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+                           onClick={() => removePricingPackage(index)}
+                           disabled={isLoading}
+                         >
+                           <span className="material-icons">close</span>
+                         </button>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+               </div>
+               </div>
 
             {/* Images Section */}
             <div className="yacht-modal__section">
@@ -560,8 +724,8 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                 <span className="material-icons">photo_library</span>
                 <h3>Galería de Imágenes</h3>
                 <p>Sube fotos de tu yate para mostrar su belleza</p>
-              </div>
-              
+               </div>
+
               <div className="yacht-modal__images-section">
                 <div 
                   {...getRootProps()} 
@@ -608,7 +772,7 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                   ) : (
                     <div className="yacht-modal__dropzone-content">
                       <div className="yacht-modal__dropzone-icon">
-                        <span className="material-icons">cloud_upload</span>
+                      <span className="material-icons">cloud_upload</span>
                       </div>
                       <h4>{isDragActive ? 'Suelta las imágenes aquí' : 'Sube imágenes de tu yate'}</h4>
                       <p>Haz clic o arrastra imágenes aquí para comenzar</p>
@@ -622,18 +786,18 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                 
                 {imagePreviews.length > 0 && (
                   <div className="yacht-modal__images-actions">
-                    <button 
-                      type="button" 
+                  <button 
+                    type="button" 
                       className="yacht-modal__remove-all-images-btn"
-                      onClick={() => {
-                        setImagePreviews([]);
-                        setFormData(prev => ({ ...prev, images: [] }));
-                      }}
-                      disabled={isLoading}
-                    >
-                      <span className="material-icons">delete_sweep</span>
+                    onClick={() => {
+                      setImagePreviews([]);
+                      setFormData(prev => ({ ...prev, images: [] }));
+                    }}
+                    disabled={isLoading}
+                  >
+                    <span className="material-icons">delete_sweep</span>
                       Eliminar todas
-                    </button>
+                  </button>
                   </div>
                 )}
               </div>
@@ -651,16 +815,16 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                 <label htmlFor="description">Descripción del Yate *</label>
                 <div className="yacht-modal__input-wrapper">
                   <span className="yacht-modal__input-icon material-icons">edit</span>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
                     placeholder="Describe las características principales, comodidades y experiencia que ofrece tu yate..."
                     rows={4}
-                    required
-                    disabled={isLoading}
-                  />
+                  required
+                  disabled={isLoading}
+                />
                 </div>
               </div>
             </div>
@@ -672,85 +836,85 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                 <h3>Características y Equipamiento</h3>
                 <p>Destaca las características especiales de tu yate</p>
               </div>
-              
+
               <div className="yacht-modal__features-input-container">
                 <div className="yacht-modal__features-input-row">
                   <div className="yacht-modal__input-wrapper">
                     <span className="yacht-modal__input-icon material-icons">add_circle</span>
-                    <input
-                      type="text"
-                      value={newCharacteristic}
-                      onChange={(e) => setNewCharacteristic(e.target.value)}
+                   <input
+                     type="text"
+                     value={newCharacteristic}
+                     onChange={(e) => setNewCharacteristic(e.target.value)}
                       placeholder="Ej: bar, capitán, wifi, equipos de buceo..."
-                      disabled={isLoading}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addFeature();
-                        }
-                      }}
-                    />
+                     disabled={isLoading}
+                     onKeyPress={(e) => {
+                       if (e.key === 'Enter') {
+                         e.preventDefault();
+                         addFeature();
+                       }
+                     }}
+                   />
                   </div>
-                  <button
-                    type="button"
+                   <button
+                     type="button"
                     className="yacht-modal__add-feature-btn"
-                    onClick={addFeature}
-                    disabled={isLoading || !newCharacteristic.trim()}
-                  >
-                    <span className="material-icons">add</span>
+                     onClick={addFeature}
+                     disabled={isLoading || !newCharacteristic.trim()}
+                   >
+                     <span className="material-icons">add</span>
                     Agregar
-                  </button>
-                </div>
+                   </button>
+                 </div>
                 
-                {formData.features && formData.features.split(',').length > 0 && (
+                 {formData.features && formData.features.split(',').length > 0 && (
                   <div className="yacht-modal__features-grid">
-                    {formData.features.split(',').map((feature, index) => (
+                     {formData.features.split(',').map((feature, index) => (
                       <div key={index} className="yacht-modal__feature-card">
                         <span className="yacht-modal__feature-text">{feature.trim()}</span>
-                        <button
-                          type="button"
+                         <button
+                           type="button"
                           className="yacht-modal__remove-feature-btn"
-                          onClick={() => removeFeature(index)}
-                          disabled={isLoading}
-                        >
-                          <span className="material-icons">close</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                           onClick={() => removeFeature(index)}
+                           disabled={isLoading}
+                         >
+                           <span className="material-icons">close</span>
+                         </button>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+               </div>
             </div>
             
             {/* Modal Footer */}
             <div className="yacht-modal__footer">
               <div className="yacht-modal__footer-actions">
-                <button 
-                  type="button"
+              <button 
+                type="button"
                   className="yacht-modal__btn yacht-modal__btn-secondary" 
-                  onClick={handleClose}
-                  disabled={isLoading}
-                >
+                onClick={handleClose}
+                disabled={isLoading}
+              >
                   <span className="material-icons">close</span>
-                  Cancelar
-                </button>
-                <button 
-                  type="submit"
+                Cancelar
+              </button>
+              <button 
+                type="submit"
                   className="yacht-modal__btn yacht-modal__btn-primary"
-                  disabled={isLoading || !formData.name || !formData.location || !formData.description || formData.yachtCategoryId === 0}
-                >
-                  {isLoading ? (
-                    <>
+                                 disabled={isLoading || !formData.name || !formData.location || !formData.description || formData.yachtCategoryId === 0}
+              >
+                {isLoading ? (
+                  <>
                       <div className="yacht-modal__loading-spinner"></div>
-                      <span>Guardando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="material-icons">sailing</span>
-                      <span>{editingYacht ? 'Actualizar' : 'Crear'} Yate</span>
-                    </>
-                  )}
-                </button>
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-icons">sailing</span>
+                    <span>{editingYacht ? 'Actualizar' : 'Crear'} Yate</span>
+                  </>
+                )}
+              </button>
               </div>
             </div>
           </form>

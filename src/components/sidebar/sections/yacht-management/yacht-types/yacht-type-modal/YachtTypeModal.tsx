@@ -1,8 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useYachtTypeStore } from '../../../../../../zustand/yachtTypeStore';
 import { usePopupStore } from '../../../../../../zustand/popupStore';
+import useUserStore from '../../../../../../zustand/useUserStore';
 import APIs from '../../../../../../services/services/APIs';
 import './styles/YachtTypeModal.css';
+
+interface State {
+  id: number;
+  name: string;
+}
+
+interface Municipality {
+  id: number;
+  name: string;
+}
+
+interface Locality {
+  id: number;
+  name: string;
+}
 
 interface YachtTypeModalProps {
   isOpen: boolean;
@@ -12,29 +28,131 @@ interface YachtTypeModalProps {
 
 interface YachtTypeForm {
   name: string;
+  stateId: number;
+  municipalityId: number;
+  localityId: number;
 }
 
 const YachtTypeModal: React.FC<YachtTypeModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { editingType } = useYachtTypeStore();
   const { showSuccess, showError } = usePopupStore();
+  const { user } = useUserStore();
   const [formData, setFormData] = useState<YachtTypeForm>({
-    name: ''
+    name: '',
+    stateId: 0,
+    municipalityId: 0,
+    localityId: 0
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [states, setStates] = useState<State[]>([]);
+  const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
+  const [localities, setLocalities] = useState<Locality[]>([]);
+  const [isLoadingStates, setIsLoadingStates] = useState(false);
+  const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false);
+  const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
+
+  // Fetch states
+  const fetchStates = useCallback(async () => {
+    setIsLoadingStates(true);
+    try {
+      const response: any = await APIs.getAllStates();
+      if (response.data) {
+        setStates(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching states:', error);
+    } finally {
+      setIsLoadingStates(false);
+    }
+  }, []);
+
+  // Fetch municipalities
+  const fetchMunicipalities = useCallback(async (stateId: number) => {
+    setIsLoadingMunicipalities(true);
+    try {
+      const response: any = await APIs.getMunicipalitiesByState(stateId);
+      if (response.data) {
+        setMunicipalities(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching municipalities:', error);
+    } finally {
+      setIsLoadingMunicipalities(false);
+    }
+  }, []);
+
+  // Fetch localities
+  const fetchLocalities = useCallback(async (municipalityId: number) => {
+    setIsLoadingLocalities(true);
+    try {
+      const response: any = await APIs.getLocalitiesByMunicipality(municipalityId);
+      if (response.data) {
+        setLocalities(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching localities:', error);
+    } finally {
+      setIsLoadingLocalities(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchStates();
+    }
+  }, [isOpen, fetchStates]);
+
+  // Handle state change
+  useEffect(() => {
+    if (formData.stateId && formData.stateId !== 0) {
+      fetchMunicipalities(formData.stateId);
+      setFormData(prev => ({
+        ...prev,
+        municipalityId: 0,
+        localityId: 0
+      }));
+      setLocalities([]);
+    }
+  }, [formData.stateId, fetchMunicipalities]);
+
+  // Handle municipality change
+  useEffect(() => {
+    if (formData.municipalityId && formData.municipalityId !== 0) {
+      fetchLocalities(formData.municipalityId);
+      setFormData(prev => ({
+        ...prev,
+        localityId: 0
+      }));
+    }
+  }, [formData.municipalityId, fetchLocalities]);
 
   useEffect(() => {
     if (editingType) {
       setFormData({
-        name: editingType.name
+        name: editingType.name,
+        stateId: editingType.stateId || 0,
+        municipalityId: editingType.municipalityId || 0,
+        localityId: editingType.localityId || 0
       });
+      
+      // Load municipalities and localities if editing
+      if (editingType.stateId) {
+        fetchMunicipalities(editingType.stateId);
+      }
+      if (editingType.municipalityId) {
+        fetchLocalities(editingType.municipalityId);
+      }
     } else {
       setFormData({
-        name: ''
+        name: '',
+        stateId: 0,
+        municipalityId: 0,
+        localityId: 0
       });
     }
     setErrors({});
-  }, [editingType, isOpen]);
+  }, [editingType, isOpen, fetchMunicipalities, fetchLocalities]);
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -47,18 +165,30 @@ const YachtTypeModal: React.FC<YachtTypeModalProps> = ({ isOpen, onClose, onSucc
       newErrors.name = 'El nombre no puede exceder 50 caracteres';
     }
 
+    if (!formData.stateId || formData.stateId === 0) {
+      newErrors.stateId = 'Debe seleccionar un estado';
+    }
+
+    if (!formData.municipalityId || formData.municipalityId === 0) {
+      newErrors.municipalityId = 'Debe seleccionar un municipio';
+    }
+
+    if (!formData.localityId || formData.localityId === 0) {
+      newErrors.localityId = 'Debe seleccionar una localidad';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'stateId' || name === 'municipalityId' || name === 'localityId' ? Number(value) : value
     }));
     
-    // Clear error when user starts typing
+    // Clear error when user starts typing/selecting
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -79,13 +209,17 @@ const YachtTypeModal: React.FC<YachtTypeModalProps> = ({ isOpen, onClose, onSucc
     try {
       if (editingType) {
         // Update existing yacht type
-        const response: any = await APIs.updateYachtType(editingType.id, formData);
+        const updateData = { ...formData, userId: user.id, typeUser: user.role.name };
+        console.log('🔄 Updating yacht type with data:', updateData);
+        const response: any = await APIs.updateYachtType(editingType.id, updateData);
         showSuccess(response.message || 'Categoría de yate actualizada exitosamente');
         onSuccess(); // Recargar datos
         handleClose();
       } else {
         // Create new yacht type
-        const response = await APIs.createYachtType(formData);
+        const createData = { ...formData, userId: user.id, typeUser: user.role.name };
+        console.log('🆕 Creating yacht type with data:', createData);
+        const response = await APIs.createYachtType(createData);
         const responseData = response as any;
         showSuccess(responseData.message || 'Categoría de yate creada exitosamente');
         onSuccess(); // Recargar datos
@@ -108,7 +242,12 @@ const YachtTypeModal: React.FC<YachtTypeModalProps> = ({ isOpen, onClose, onSucc
   };
 
   const handleClose = () => {
-    setFormData({ name: '' });
+    setFormData({ 
+      name: '',
+      stateId: 0,
+      municipalityId: 0,
+      localityId: 0
+    });
     setErrors({});
     setIsLoading(false);
     onClose();
@@ -157,6 +296,92 @@ const YachtTypeModal: React.FC<YachtTypeModalProps> = ({ isOpen, onClose, onSucc
             </p>
           </div>
 
+          <div className="yacht-type-form-group">
+            <label htmlFor="stateId" className="yacht-type-form-label">
+              Estado *
+            </label>
+            <div className="yacht-type-input-wrapper">
+              <span className="material-icons yacht-type-input-icon">location_on</span>
+              <select
+                id="stateId"
+                name="stateId"
+                className={`yacht-type-form-select ${errors.stateId ? 'error' : ''}`}
+                value={formData.stateId}
+                onChange={handleInputChange}
+                required
+                disabled={isLoading || isLoadingStates}
+              >
+                <option value={0}>
+                  {isLoadingStates ? 'Cargando estados...' : 'Seleccionar estado'}
+                </option>
+                {states.map(state => (
+                  <option key={state.id} value={state.id}>{state.name}</option>
+                ))}
+              </select>
+            </div>
+            {errors.stateId && (
+              <p className="yacht-type-form-error">{errors.stateId}</p>
+            )}
+          </div>
+
+          <div className="yacht-type-form-group">
+            <label htmlFor="municipalityId" className="yacht-type-form-label">
+              Municipio *
+            </label>
+            <div className="yacht-type-input-wrapper">
+              <span className="material-icons yacht-type-input-icon">location_city</span>
+              <select
+                id="municipalityId"
+                name="municipalityId"
+                className={`yacht-type-form-select ${errors.municipalityId ? 'error' : ''}`}
+                value={formData.municipalityId}
+                onChange={handleInputChange}
+                required
+                disabled={isLoading || isLoadingMunicipalities || !formData.stateId}
+              >
+                <option value={0}>
+                  {isLoadingMunicipalities ? 'Cargando municipios...' : 
+                   !formData.stateId ? 'Selecciona un estado primero' : 'Seleccionar municipio'}
+                </option>
+                {municipalities.map(municipality => (
+                  <option key={municipality.id} value={municipality.id}>{municipality.name}</option>
+                ))}
+              </select>
+            </div>
+            {errors.municipalityId && (
+              <p className="yacht-type-form-error">{errors.municipalityId}</p>
+            )}
+          </div>
+
+          <div className="yacht-type-form-group">
+            <label htmlFor="localityId" className="yacht-type-form-label">
+              Localidad *
+            </label>
+            <div className="yacht-type-input-wrapper">
+              <span className="material-icons yacht-type-input-icon">location_on</span>
+              <select
+                id="localityId"
+                name="localityId"
+                className={`yacht-type-form-select ${errors.localityId ? 'error' : ''}`}
+                value={formData.localityId}
+                onChange={handleInputChange}
+                required
+                disabled={isLoading || isLoadingLocalities || !formData.municipalityId}
+              >
+                <option value={0}>
+                  {isLoadingLocalities ? 'Cargando localidades...' : 
+                   !formData.municipalityId ? 'Selecciona un municipio primero' : 'Seleccionar localidad'}
+                </option>
+                {localities.map(locality => (
+                  <option key={locality.id} value={locality.id}>{locality.name}</option>
+                ))}
+              </select>
+            </div>
+            {errors.localityId && (
+              <p className="yacht-type-form-error">{errors.localityId}</p>
+            )}
+          </div>
+
           <div className="yacht-type-modal-actions">
             <button 
               type="button" 
@@ -169,7 +394,7 @@ const YachtTypeModal: React.FC<YachtTypeModalProps> = ({ isOpen, onClose, onSucc
             <button 
               type="submit" 
               className="yacht-type-btn yacht-type-btn-primary"
-              disabled={isLoading || !formData.name.trim()}
+              disabled={isLoading || !formData.name.trim() || !formData.stateId || !formData.municipalityId || !formData.localityId}
             >
               {isLoading ? (
                 <>

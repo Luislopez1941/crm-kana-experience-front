@@ -22,6 +22,14 @@ export const PrivateRoutes = {
   CLUBS: 'clubs',
   CLUB_TYPES: 'club-types',
 
+  
+  //Secciones de Usuarios ///
+  USERS: 'users',
+
+  //Secciones de Ubicaciones ///
+  LOCATIONS: 'locations',
+
+  //Secciones de Procesos ///
   PROCESSOS: 'processes',
   CATALOGUE: 'catalogue',
   WAREHOUSES: 'warehouses',

@@ -10,8 +10,9 @@ const PrivateValidationFragment = <Outlet />;
 const PublicValidationFragment = <Navigate replace to={'/'} />
 
 export const AuthGuard = ({ privateValidation }: Props) => {
-    const userState = useUserStore(state => state.user);;
-    return userState.id ? (
+    const { user } = useUserStore();
+
+    return user?.id ? (
         privateValidation ? (
             PrivateValidationFragment
         ) : (

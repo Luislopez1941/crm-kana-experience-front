@@ -30,6 +30,9 @@ interface TourForm {
   transportacion?: string;
   images: string[];
   characteristics: string[];
+  stateId: number;
+  municipalityId: number;
+  localityId: number;
 }
 
 const TourModal: React.FC<CreateTourModalProps> = ({ isOpen, onClose, onSuccess, editingTour }) => {
@@ -50,7 +53,10 @@ const TourModal: React.FC<CreateTourModalProps> = ({ isOpen, onClose, onSuccess,
     edadMinima: '',
     transportacion: '',
     images: [],
-    characteristics: []
+    characteristics: [],
+    stateId: 0,
+    municipalityId: 0,
+    localityId: 0
   });
 
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -58,6 +64,12 @@ const TourModal: React.FC<CreateTourModalProps> = ({ isOpen, onClose, onSuccess,
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
   const [newCharacteristic, setNewCharacteristic] = useState<string>('');
   const [newPricingPackage, setNewPricingPackage] = useState<PricingPackage>({ personas: null, precio: null });
+  const [states, setStates] = useState<any[]>([]);
+  const [municipalities, setMunicipalities] = useState<any[]>([]);
+  const [localities, setLocalities] = useState<any[]>([]);
+  const [isLoadingStates, setIsLoadingStates] = useState(false);
+  const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false);
+  const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
   console.log(originalImages)
   // Fetch tour categories
   const fetchTourCategories = async () => {
@@ -74,12 +86,82 @@ const TourModal: React.FC<CreateTourModalProps> = ({ isOpen, onClose, onSuccess,
     }
   };
 
+  // Fetch states
+  const fetchStates = async () => {
+    setIsLoadingStates(true);
+    try {
+      const response: any = await APIs.getAllStates();
+      if (response.data) {
+        setStates(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching states:', error);
+    } finally {
+      setIsLoadingStates(false);
+    }
+  };
+
+  // Fetch municipalities
+  const fetchMunicipalities = async (stateId: number) => {
+    setIsLoadingMunicipalities(true);
+    try {
+      const response: any = await APIs.getMunicipalitiesByState(stateId);
+      if (response.data) {
+        setMunicipalities(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching municipalities:', error);
+    } finally {
+      setIsLoadingMunicipalities(false);
+    }
+  };
+
+  // Fetch localities
+  const fetchLocalities = async (municipalityId: number) => {
+    setIsLoadingLocalities(true);
+    try {
+      const response: any = await APIs.getLocalitiesByMunicipality(municipalityId);
+      if (response.data) {
+        setLocalities(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching localities:', error);
+    } finally {
+      setIsLoadingLocalities(false);
+    }
+  };
+
   // Load tour categories on component mount
   useEffect(() => {
     if (isOpen) {
       fetchTourCategories();
+      fetchStates();
     }
   }, [isOpen]);
+
+  // Handle state change
+  useEffect(() => {
+    if (formData.stateId && formData.stateId !== 0) {
+      fetchMunicipalities(formData.stateId);
+      setFormData(prev => ({
+        ...prev,
+        municipalityId: 0,
+        localityId: 0
+      }));
+      setLocalities([]);
+    }
+  }, [formData.stateId]);
+
+  // Handle municipality change
+  useEffect(() => {
+    if (formData.municipalityId && formData.municipalityId !== 0) {
+      fetchLocalities(formData.municipalityId);
+      setFormData(prev => ({
+        ...prev,
+        localityId: 0
+      }));
+    }
+  }, [formData.municipalityId]);
 
   // Load editing tour data
   useEffect(() => {
@@ -139,7 +221,10 @@ const TourModal: React.FC<CreateTourModalProps> = ({ isOpen, onClose, onSuccess,
         edadMinima: editingTour.edadMinima || '',
         transportacion: editingTour.transportacion || '',
         images: images,
-        characteristics: characteristics
+        characteristics: characteristics,
+        stateId: editingTour.stateId || 0,
+        municipalityId: editingTour.municipalityId || 0,
+        localityId: editingTour.localityId || 0
       });
 
       setImagePreviews(images);
@@ -161,7 +246,10 @@ const TourModal: React.FC<CreateTourModalProps> = ({ isOpen, onClose, onSuccess,
          edadMinima: '',
          transportacion: '',
          images: [],
-         characteristics: []
+         characteristics: [],
+         stateId: 0,
+         municipalityId: 0,
+         localityId: 0
        });
       setImagePreviews([]);
       setOriginalImages([]);
@@ -202,18 +290,7 @@ const TourModal: React.FC<CreateTourModalProps> = ({ isOpen, onClose, onSuccess,
   const [tourTypes, setTourTypes] = useState<any[]>([]);
   const [isLoadingTypes, setIsLoadingTypes] = useState(false);
 
-  const locations = [
-    'Cancún',
-    'Cozumel',
-    'Isla Mujeres',
-    'Playa del Carmen',
-    'Tulum',
-    'Puerto Morelos',
-    'Holbox',
-    'Bacalar',
-    'Mahahual',
-    'Xcalak'
-  ];
+
 
   const statusOptions = [
     { value: 'Activo', label: 'Activo' },
@@ -290,7 +367,7 @@ const TourModal: React.FC<CreateTourModalProps> = ({ isOpen, onClose, onSuccess,
 
     try {
       // Validate required fields
-      if (!formData.name || !formData.description || !formData.tourCategoryId || !formData.location) {
+      if (!formData.name || !formData.description || !formData.tourCategoryId || !formData.stateId || !formData.municipalityId || !formData.localityId) {
         showError('Por favor completa todos los campos requeridos');
         return;
       }
@@ -351,7 +428,10 @@ const TourModal: React.FC<CreateTourModalProps> = ({ isOpen, onClose, onSuccess,
       edadMinima: '',
       transportacion: '',
       images: [],
-      characteristics: []
+      characteristics: [],
+      stateId: 0,
+      municipalityId: 0,
+      localityId: 0
     });
     setImagePreviews([]);
     setOriginalImages([]);
@@ -433,22 +513,86 @@ const TourModal: React.FC<CreateTourModalProps> = ({ isOpen, onClose, onSuccess,
                 </div>
 
                 <div className="tour-modal__form-group">
-                  <label htmlFor="location">Ubicación *</label>
+                  <label htmlFor="stateId">Estado *</label>
                   <div className="tour-modal__input-wrapper">
                     <span className="tour-modal__input-icon material-icons">location_on</span>
                     <select
+                      id="stateId"
+                      name="stateId"
+                      value={formData.stateId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading || isLoadingStates}
+                    >
+                      <option value="">
+                        {isLoadingStates ? 'Cargando estados...' : 'Seleccionar estado'}
+                      </option>
+                      {states.map(state => (
+                        <option key={state.id} value={state.id}>{state.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="tour-modal__form-group">
+                  <label htmlFor="municipalityId">Municipio *</label>
+                  <div className="tour-modal__input-wrapper">
+                    <span className="tour-modal__input-icon material-icons">location_city</span>
+                    <select
+                      id="municipalityId"
+                      name="municipalityId"
+                      value={formData.municipalityId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading || isLoadingMunicipalities || !formData.stateId}
+                    >
+                      <option value="">
+                        {isLoadingMunicipalities ? 'Cargando municipios...' : 
+                         !formData.stateId ? 'Selecciona un estado primero' : 'Seleccionar municipio'}
+                      </option>
+                      {municipalities.map(municipality => (
+                        <option key={municipality.id} value={municipality.id}>{municipality.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="tour-modal__form-group">
+                  <label htmlFor="localityId">Localidad *</label>
+                  <div className="tour-modal__input-wrapper">
+                    <span className="tour-modal__input-icon material-icons">location_on</span>
+                    <select
+                      id="localityId"
+                      name="localityId"
+                      value={formData.localityId}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading || isLoadingLocalities || !formData.municipalityId}
+                    >
+                      <option value="">
+                        {isLoadingLocalities ? 'Cargando localidades...' : 
+                         !formData.municipalityId ? 'Selecciona un municipio primero' : 'Seleccionar localidad'}
+                      </option>
+                      {localities.map(locality => (
+                        <option key={locality.id} value={locality.id}>{locality.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="tour-modal__form-group">
+                  <label htmlFor="location">Ubicación Específica</label>
+                  <div className="tour-modal__input-wrapper">
+                    <span className="tour-modal__input-icon material-icons">business</span>
+                    <input
+                      type="text"
                       id="location"
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
-                      required
+                      placeholder="Ej: Centro de Cancún, Zona Hotelera"
                       disabled={isLoading}
-                    >
-                      <option value="">Seleccionar ubicación</option>
-                      {locations.map(location => (
-                        <option key={location} value={location}>{location}</option>
-                      ))}
-                    </select>
+                    />
                   </div>
                 </div>
 
