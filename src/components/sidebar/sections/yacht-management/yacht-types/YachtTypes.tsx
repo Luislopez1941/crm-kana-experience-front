@@ -69,7 +69,12 @@ const YachtTypes: React.FC = () => {
   const fetchYachtTypes = async () => {
     setIsLoading(true);
     try {
-      const response: any = await APIs.getAllYachtCategories({user: user.id, state: 0, municipality: 0, locality: 0});
+      const response: any = await APIs.getAllYachtCategories({
+        userId: user.id, 
+        state: selectedState, 
+        municipality: selectedMunicipality, 
+        locality: selectedLocality
+      });
       if (response.data) {
         setYachtTypes(response.data);
       }
@@ -167,6 +172,13 @@ const YachtTypes: React.FC = () => {
     }
   }, [selectedMunicipality]);
 
+  // Refetch yacht types when location filters change
+  useEffect(() => {
+    if (user?.id) {
+      fetchYachtTypes();
+    }
+  }, [selectedState, selectedMunicipality, selectedLocality]);
+
   const handleEdit = (type: any) => {
     setEditingType(type);
     setIsModalOpen(true);
@@ -208,6 +220,7 @@ const YachtTypes: React.FC = () => {
     setSelectedState(0);
     setSelectedMunicipality(0);
     setSelectedLocality(0);
+    // Los datos se recargarán automáticamente por el useEffect
   };
 
 

@@ -37,9 +37,9 @@ const APIs = {
 
   // Yacht Types
 
-  getAllYachtType: async (customPath?: string) => {
-    const path = customPath || 'yacht-categories/get-all';
-    return ConfigurationAPIs.get(path);
+  getCategories: async (data: any, customPath?: string) => {
+    const path = customPath || 'yacht-categories/get-categories-by-ids';
+    return ConfigurationAPIs.post(path, data);
   },
 
   createYachtType: async (data: any, customPath?: string) => {
@@ -63,8 +63,8 @@ const APIs = {
     return ConfigurationAPIs.post(path, data);
   },
 
-  getAllYachtCategories: async (data: any, customPath?: string) => {
-    const path = customPath || 'yacht-categories/get-yacht-categories-by-ids';
+  getAllYachtCategories: async (data: { userId: number; state: number; municipality: number; locality: number }, customPath?: string) => {
+    const path = customPath || 'yacht-categories/get-categories-by-ids';
     return ConfigurationAPIs.post(path, data);
   },
 

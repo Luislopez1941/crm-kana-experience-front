@@ -74,15 +74,24 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
   const [isLoadingStates, setIsLoadingStates] = useState(false);
   const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false);
   const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [newPricingPackage, setNewPricingPackage] = useState<PricingPackage>({ hours: null, price: null });
 
   // Fetch yacht categories when modal opens
   const fetchYachtCategories = async () => {
+    setIsLoadingCategories(true);
     try {
-      const response: any = await APIs.getAllYachtCategories({user: user.id, state: 0, municipality: 0, locality: 0});
+      const response: any = await APIs.getAllYachtCategories({
+        userId: user.id, 
+        state: formData.stateId, 
+        municipality: formData.municipalityId, 
+        locality: formData.localityId
+      });
       setYachtCategories(response.data);
     } catch (error) {
       console.error('Error fetching yacht categories:', error);
+    } finally {
+      setIsLoadingCategories(false);
     }
   };
 
@@ -163,8 +172,8 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
 
   useEffect(() => {
     if (isOpen) {
-      fetchYachtCategories();
       fetchStates();
+      // Las categorías se cargarán cuando se seleccione una ubicación
     }
   }, [isOpen]);
 
@@ -191,6 +200,13 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
       }));
     }
   }, [formData.municipalityId]);
+
+  // Refetch yacht categories when location filters change
+  useEffect(() => {
+    if (user?.id && (formData.stateId > 0 || formData.municipalityId > 0 || formData.localityId > 0)) {
+      fetchYachtCategories();
+    }
+  }, [formData.stateId, formData.municipalityId, formData.localityId]);
 
   useEffect(() => {
     if (editingYacht) {
@@ -480,9 +496,16 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                     value={formData.yachtCategoryId}
                     onChange={handleInputChange}
                     required
-                    disabled={isLoading}
+                    disabled={isLoading || isLoadingCategories || !formData.stateId || !formData.municipalityId || !formData.localityId}
                   >
-                    <option value={0}>Seleccionar categoría</option>
+                    <option value={0}>
+                      {isLoadingCategories ? 'Cargando categorías...' :
+                       !formData.stateId ? 'Selecciona un estado primero' :
+                       !formData.municipalityId ? 'Selecciona un municipio primero' :
+                       !formData.localityId ? 'Selecciona una localidad primero' :
+                       yachtCategories.length === 0 ? 'No hay categorías disponibles para esta ubicación' :
+                       'Seleccionar categoría'}
+                    </option>
                     {yachtCategories.map(category => (
                       <option key={category.id} value={category.id}>{category.name}</option>
                     ))}
