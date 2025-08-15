@@ -48,7 +48,12 @@ const YachtManagement: React.FC = () => {
 
   const fetchYachtCategories = async () => {
     try {
-      const response: any = await APIs.getAllYachtType();
+      const response: any = await APIs.getAllYachtCategories({
+        userId: user.id,
+        state: selectedState,
+        municipality: selectedMunicipality,
+        locality: selectedLocality
+      });
       if (response?.data) {
         setYachtCategories(response.data);
       }
