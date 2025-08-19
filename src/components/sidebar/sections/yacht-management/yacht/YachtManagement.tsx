@@ -13,7 +13,7 @@ const YachtManagement: React.FC = () => {
   const navigate = useNavigate();
   const {
     yachts,
-   
+    editingYacht,
     searchTerm,
     setSearchTerm,
     setYachts,
@@ -111,9 +111,8 @@ const YachtManagement: React.FC = () => {
     setIsLoading(true);
     let data = {
       user: user.id,
-      state: 0,
-      municipality: 0,
-      locality: 0
+      yachtCategoryId: selectedCategory,
+      page: 1
     }
     try {
       const response: any = await APIs.getYachts(data);
@@ -132,8 +131,13 @@ const YachtManagement: React.FC = () => {
 
   const fetchYachtsByCategory = async (categoryId: number) => {
     setIsLoading(true);
+    let data = {
+      user: user.id,
+      yachtCategoryId: categoryId,
+      page: 1
+    }
     try {
-      const response: any = await APIs.getYachtByYachtCategory(categoryId);
+      const response: any = await APIs.getYachts(data);
       if (response?.data) {
         console.log('🔍 YACHTS BY CATEGORY:', response.data);
         setFilteredYachts(response.data);
@@ -145,9 +149,25 @@ const YachtManagement: React.FC = () => {
     }
   };
 
-  const handleCategoryChange = (categoryId: string) => {
+  const handleCategoryChange = async (categoryId: string) => {
     setSelectedCategory(categoryId);
-    applyFilters();
+    
+    try {
+      if (categoryId === '') {
+        // Show all yachts - fetch with categoryId: 0
+        console.log('🔍 Fetching all yachts (categoryId: 0)');
+        await fetchYachtsByCategory(0);
+      } else {
+        // Filter by specific category
+        const categoryIdNum = Number(categoryId);
+        console.log('🔍 Fetching yachts for category:', categoryIdNum);
+        await fetchYachtsByCategory(categoryIdNum);
+      }
+    } catch (error) {
+      console.error('Error fetching yachts by category:', error);
+      // Fallback to local filtering if API fails
+      applyFilters();
+    }
   };
 
   const handleStateChange = (stateId: number) => {
@@ -193,36 +213,66 @@ const YachtManagement: React.FC = () => {
   };
 
   const applyFilters = () => {
+    console.log('🔍 Applying filters...');
+    console.log('🔍 Selected category:', selectedCategory);
+    console.log('🔍 Selected state:', selectedState);
+    console.log('🔍 Selected municipality:', selectedMunicipality);
+    console.log('🔍 Selected locality:', selectedLocality);
+    console.log('🔍 Total yachts:', yachts.length);
+
     let filtered = [...yachts];
 
     // Filter by category
     if (selectedCategory !== '') {
-      filtered = filtered.filter(yacht => yacht.yachtCategoryId === Number(selectedCategory));
+      const categoryId = Number(selectedCategory);
+      console.log('🔍 Filtering by category ID:', categoryId);
+      filtered = filtered.filter(yacht => {
+        console.log(`🔍 Yacht ${yacht.name} categoryId: ${yacht.yachtCategoryId}`);
+        return yacht.yachtCategoryId === categoryId;
+      });
+      console.log('🔍 After category filter:', filtered.length);
     }
 
     // Filter by state
     if (selectedState !== 0) {
+      console.log('🔍 Filtering by state ID:', selectedState);
       filtered = filtered.filter(yacht => yacht.stateId === selectedState);
+      console.log('🔍 After state filter:', filtered.length);
     }
 
     // Filter by municipality
     if (selectedMunicipality !== 0) {
+      console.log('🔍 Filtering by municipality ID:', selectedMunicipality);
       filtered = filtered.filter(yacht => yacht.municipalityId === selectedMunicipality);
+      console.log('🔍 After municipality filter:', filtered.length);
     }
 
     // Filter by locality
     if (selectedLocality !== 0) {
+      console.log('🔍 Filtering by locality ID:', selectedLocality);
       filtered = filtered.filter(yacht => yacht.localityId === selectedLocality);
+      console.log('🔍 After locality filter:', filtered.length);
     }
 
+    console.log('🔍 Final filtered yachts:', filtered.length);
     setFilteredYachts(filtered);
   };
 
-  const reloadFilteredData = () => {
-    if (selectedCategory === '') {
-      fetchYachts();
-    } else {
-      fetchYachtsByCategory(Number(selectedCategory));
+  const reloadFilteredData = async () => {
+    try {
+      if (selectedCategory === '') {
+        // Reload all yachts
+        await fetchYachtsByCategory(0);
+      } else {
+        // Reload yachts for specific category
+        const categoryIdNum = Number(selectedCategory);
+        console.log('🔍 Reloading yachts for category:', categoryIdNum);
+        await fetchYachtsByCategory(categoryIdNum);
+      }
+    } catch (error) {
+      console.error('Error reloading yachts:', error);
+      // Fallback to local filtering if API fails
+      applyFilters();
     }
   };
 
@@ -231,6 +281,14 @@ const YachtManagement: React.FC = () => {
     fetchYachtCategories();
     fetchStates();
   }, []);
+
+  // Apply filters when location filters change (but not category, as that uses API)
+  useEffect(() => {
+    // Only apply filters for location changes, not category changes
+    if (selectedState !== 0 || selectedMunicipality !== 0 || selectedLocality !== 0) {
+      applyFilters();
+    }
+  }, [selectedState, selectedMunicipality, selectedLocality, yachts]);
 
 
 
@@ -499,16 +557,24 @@ const YachtManagement: React.FC = () => {
                     </div>
 
                     <div className="yacht-management-page__features-preview">
-                      {yacht.characteristics?.slice(0, 3).map((characteristic: any, index: any) => (
-                        <span key={index} className="yacht-management-page__feature-tag">
-                          {characteristic}
+                      {yacht.characteristics && Array.isArray(yacht.characteristics) && yacht.characteristics.length > 0 ? (
+                        <>
+                          {yacht.characteristics.slice(0, 3).map((characteristic: any, index: any) => (
+                            <span key={characteristic.id || index} className="yacht-management-page__feature-tag">
+                              {characteristic.name || characteristic}
+                            </span>
+                          ))}
+                          {yacht.characteristics.length > 3 && (
+                            <span className="yacht-management-page__feature-tag more">
+                              +{yacht.characteristics.length - 3} más
+                            </span>
+                          )}
+                        </>
+                      ) : yacht.features ? (
+                        <span className="yacht-management-page__feature-tag">
+                          {yacht.features.split(',').slice(0, 3).join(', ')}
                         </span>
-                      ))}
-                      {yacht.characteristics && yacht.characteristics.length > 3 && (
-                        <span className="yacht-management-page__feature-tag more">
-                          +{yacht.characteristics.length - 3} más
-                        </span>
-                      )}
+                      ) : null}
                     </div>
 
                     <div className="yacht-management-page__card-actions">
@@ -538,8 +604,12 @@ const YachtManagement: React.FC = () => {
       {/* Yacht Modal */}
       <YachtModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingYacht(null); // Clear editing yacht when modal closes
+        }}
         onSuccess={reloadFilteredData}
+        editingYacht={editingYacht}
       />
     </div>
   );

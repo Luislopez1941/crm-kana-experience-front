@@ -14,6 +14,7 @@ export interface Yacht {
   images: string[];
   description: string;
   features: string;
+  characteristics?: Array<{name: string}>;
   pricing: PricingPackage[];
   status: string;
   yachtCategoryId: number;
@@ -21,6 +22,24 @@ export interface Yacht {
   municipalityId: number;
   localityId: number;
   yachtCategory?: {
+    id: number;
+    name: string;
+    userId: number;
+    stateId: number;
+    municipalityId: number;
+    localityId: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+  state?: {
+    id: number;
+    name: string;
+  };
+  municipality?: {
+    id: number;
+    name: string;
+  };
+  locality?: {
     id: number;
     name: string;
   };

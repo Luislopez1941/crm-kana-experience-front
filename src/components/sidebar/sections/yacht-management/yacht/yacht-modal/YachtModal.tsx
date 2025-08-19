@@ -11,6 +11,7 @@ interface CreateYachtModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  editingYacht?: any; // Optional prop for editing mode
 }
 
 interface PricingPackage {
@@ -26,6 +27,7 @@ interface YachtForm {
   images: string[];
   description: string;
   features: string;
+  characteristics: Array<{name: string}>;
   pricing: PricingPackage[];
   status: string;
   yachtCategoryId: number;
@@ -47,6 +49,7 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
 
   // State declarations
   const [isLoading, setIsLoading] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   
   const [formData, setFormData] = useState<YachtForm>({
     name: '',
@@ -56,6 +59,7 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
     images: [],
     description: '',
     features: '',
+    characteristics: [],
     pricing: [{ hours: null, price: null }],
     status: 'Activo',
     yachtCategoryId: 0,
@@ -81,15 +85,61 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
   const fetchYachtCategories = async () => {
     setIsLoadingCategories(true);
     try {
+      // Use editing yacht data if available, otherwise use form data
+      const stateId = editingYacht?.stateId || formData.stateId;
+      const municipalityId = editingYacht?.municipalityId || formData.municipalityId;
+      const localityId = editingYacht?.localityId || formData.localityId;
+      
       const response: any = await APIs.getAllYachtCategories({
         userId: user.id, 
-        state: formData.stateId, 
-        municipality: formData.municipalityId, 
-        locality: formData.localityId
+        state: stateId, 
+        municipality: municipalityId, 
+        locality: localityId
       });
-      setYachtCategories(response.data);
+      if (response.data) {
+        // If we're editing a yacht and it has a category, make sure it's included
+        if (editingYacht?.yachtCategory) {
+          const categoryExists = response.data.some((c: any) => c.id === editingYacht.yachtCategory!.id);
+          if (!categoryExists) {
+            response.data.push(editingYacht.yachtCategory);
+          }
+        }
+        setYachtCategories(response.data);
+      }
     } catch (error) {
       console.error('Error fetching yacht categories:', error);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
+  // Fetch all yacht categories for editing mode
+  const fetchYachtCategoriesForEdit = async () => {
+    if (!editingYacht || !user?.id) return;
+    
+    console.log('🔍 Fetching all categories for edit mode');
+    setIsLoadingCategories(true);
+    try {
+      const response: any = await APIs.getAllYachtCategories({
+        userId: user.id, 
+        state: editingYacht.stateId, 
+        municipality: editingYacht.municipalityId, 
+        locality: editingYacht.localityId
+      });
+      
+      if (response.data) {
+        console.log('🔍 Categories loaded for edit mode:', response.data);
+        // Make sure the current category is included
+        if (editingYacht.yachtCategory) {
+          const categoryExists = response.data.some((c: any) => c.id === editingYacht.yachtCategory!.id);
+          if (!categoryExists) {
+            response.data.push(editingYacht.yachtCategory);
+          }
+        }
+        setYachtCategories(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching yacht categories for edit:', error);
     } finally {
       setIsLoadingCategories(false);
     }
@@ -101,6 +151,13 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
     try {
       const response: any = await APIs.getAllStates();
       if (response.data) {
+        // If we're editing a yacht and it has a state, make sure it's included
+        if (editingYacht?.state) {
+          const stateExists = response.data.some((s: any) => s.id === editingYacht.state!.id);
+          if (!stateExists) {
+            response.data.push(editingYacht.state);
+          }
+        }
         setStates(response.data);
       }
     } catch (error) {
@@ -112,10 +169,21 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
 
   // Fetch municipalities
   const fetchMunicipalities = async (stateId: number) => {
+    console.log('🔍 Fetching municipalities for state:', stateId);
     setIsLoadingMunicipalities(true);
     try {
       const response: any = await APIs.getMunicipalitiesByState(stateId);
+      console.log('🔍 Municipalities response:', response.data);
       if (response.data) {
+        // If we're editing a yacht and it has a municipality for this state, make sure it's included
+        if (editingYacht?.municipality && editingYacht.stateId === stateId) {
+          console.log('🔍 Adding yacht municipality to list:', editingYacht.municipality);
+          const municipalityExists = response.data.some((m: any) => m.id === editingYacht.municipality!.id);
+          if (!municipalityExists) {
+            response.data.push(editingYacht.municipality);
+          }
+        }
+        console.log('🔍 Setting municipalities:', response.data);
         setMunicipalities(response.data);
       }
     } catch (error) {
@@ -127,10 +195,21 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
 
   // Fetch localities
   const fetchLocalities = async (municipalityId: number) => {
+    console.log('🔍 Fetching localities for municipality:', municipalityId);
     setIsLoadingLocalities(true);
     try {
       const response: any = await APIs.getLocalitiesByMunicipality(municipalityId);
+      console.log('🔍 Localities response:', response.data);
       if (response.data) {
+        // If we're editing a yacht and it has a locality for this municipality, make sure it's included
+        if (editingYacht?.locality && editingYacht.municipalityId === municipalityId) {
+          console.log('🔍 Adding yacht locality to list:', editingYacht.locality);
+          const localityExists = response.data.some((l: any) => l.id === editingYacht.locality!.id);
+          if (!localityExists) {
+            response.data.push(editingYacht.locality);
+          }
+        }
+        console.log('🔍 Setting localities:', response.data);
         setLocalities(response.data);
       }
     } catch (error) {
@@ -171,15 +250,34 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
 
 
   useEffect(() => {
-    if (isOpen) {
-      fetchStates();
-      // Las categorías se cargarán cuando se seleccione una ubicación
+    if (isOpen && !isClosing) {
+      // Reset closing flag when modal opens
+      setIsClosing(false);
+      
+      if (!editingYacht) {
+        // Only fetch states when creating a new yacht
+        fetchStates();
+      } else {
+        // If editing and we don't have location data loaded, load it
+        if (states.length === 0) {
+          fetchStates();
+        }
+        if (municipalities.length === 0 && editingYacht.stateId) {
+          fetchMunicipalities(editingYacht.stateId);
+        }
+        if (localities.length === 0 && editingYacht.municipalityId) {
+          fetchLocalities(editingYacht.municipalityId);
+        }
+        if (yachtCategories.length === 0 && editingYacht.stateId && editingYacht.municipalityId && editingYacht.localityId) {
+          fetchYachtCategoriesForEdit();
+        }
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, editingYacht, states.length, municipalities.length, localities.length, yachtCategories.length, isClosing]);
 
-  // Handle state change
+  // Handle state change (only for new yachts)
   useEffect(() => {
-    if (formData.stateId && formData.stateId !== 0) {
+    if (!editingYacht && formData.stateId && formData.stateId !== 0) {
       fetchMunicipalities(formData.stateId);
       setFormData(prev => ({
         ...prev,
@@ -188,25 +286,25 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
       }));
       setLocalities([]);
     }
-  }, [formData.stateId]);
+  }, [formData.stateId, editingYacht]);
 
-  // Handle municipality change
+  // Handle municipality change (only for new yachts)
   useEffect(() => {
-    if (formData.municipalityId && formData.municipalityId !== 0) {
+    if (!editingYacht && formData.municipalityId && formData.municipalityId !== 0) {
       fetchLocalities(formData.municipalityId);
       setFormData(prev => ({
         ...prev,
         localityId: 0
       }));
     }
-  }, [formData.municipalityId]);
+  }, [formData.municipalityId, editingYacht]);
 
-  // Refetch yacht categories when location filters change
+  // Refetch yacht categories when location filters change (only for new yachts)
   useEffect(() => {
-    if (user?.id && (formData.stateId > 0 || formData.municipalityId > 0 || formData.localityId > 0)) {
+    if (!editingYacht && user?.id && (formData.stateId > 0 || formData.municipalityId > 0 || formData.localityId > 0)) {
       fetchYachtCategories();
     }
-  }, [formData.stateId, formData.municipalityId, formData.localityId]);
+  }, [formData.stateId, formData.municipalityId, formData.localityId, editingYacht]);
 
   useEffect(() => {
     if (editingYacht) {
@@ -236,32 +334,66 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
          features = editingYacht.features;
        }
       
-                                // Handle pricing
-      let pricing: PricingPackage[] = [{ hours: null, price: null }];
-          if (editingYacht.pricing) {
-            if (Array.isArray(editingYacht.pricing)) {
-          pricing = editingYacht.pricing as unknown as PricingPackage[];
-            } else if ((editingYacht as any).capacity && (editingYacht as any).pricePerDay) {
-              // Fallback to old single price structure
-          pricing = [{ hours: (editingYacht as any).capacity, price: (editingYacht as any).pricePerDay }];
-            }
-          }
+       // Handle pricing
+       let pricing: PricingPackage[] = [{ hours: null, price: null }];
+       if (editingYacht.pricing) {
+         if (Array.isArray(editingYacht.pricing)) {
+           pricing = editingYacht.pricing as unknown as PricingPackage[];
+         } else if ((editingYacht as any).capacity && (editingYacht as any).pricePerDay) {
+           // Fallback to old single price structure
+           pricing = [{ hours: (editingYacht as any).capacity, price: (editingYacht as any).pricePerDay }];
+         }
+       }
 
-             setFormData({
-         name: editingYacht.name,
-         capacity: editingYacht.capacity || 1,
-         length: editingYacht.length,
-         location: editingYacht.location,
-         images: images,
-         description: editingYacht.description,
-         features: features,
-         pricing: pricing,
-         status: editingYacht.status || 'Activo',
-         yachtCategoryId: editingYacht.yachtCategoryId || 0,
-         stateId: editingYacht.stateId || 0,
-         municipalityId: editingYacht.municipalityId || 0,
-         localityId: editingYacht.localityId || 0
-       });
+       // Load all location data for editing mode (using IDs from yacht data)
+       console.log('🔍 Setting up edit mode with yacht data:', editingYacht);
+       
+       // Load all states and select the current one
+       fetchStates();
+       
+       // Load all municipalities for the current state and select the current one
+       if (editingYacht.stateId) {
+         console.log('🔍 Loading municipalities for stateId:', editingYacht.stateId);
+         fetchMunicipalities(editingYacht.stateId);
+       }
+       
+       // Load all localities for the current municipality and select the current one
+       if (editingYacht.municipalityId) {
+         console.log('🔍 Loading localities for municipalityId:', editingYacht.municipalityId);
+         fetchLocalities(editingYacht.municipalityId);
+       }
+
+       // Load all yacht categories for this location in edit mode
+       if (user?.id && editingYacht.stateId && editingYacht.municipalityId && editingYacht.localityId) {
+         console.log('🔍 Loading all categories for location in edit mode');
+         fetchYachtCategoriesForEdit();
+       }
+
+       // Wait a bit for the state updates to complete before setting formData
+       setTimeout(() => {
+         const formDataToSet = {
+           name: editingYacht.name,
+           capacity: editingYacht.capacity || 1,
+           length: editingYacht.length,
+           location: editingYacht.location,
+           images: images,
+           description: editingYacht.description,
+           features: features,
+           characteristics: features ? features.split(',').map(f => ({ name: f.trim() })).filter(f => f.name !== '') : [],
+           pricing: pricing,
+           status: editingYacht.status || 'Activo',
+           yachtCategoryId: editingYacht.yachtCategoryId || 0,
+           stateId: editingYacht.stateId || 0,
+           municipalityId: editingYacht.municipalityId || 0,
+           localityId: editingYacht.localityId || 0
+         };
+         
+         console.log('🔍 Setting form data:', formDataToSet);
+         console.log('🔍 Current states array:', states);
+         console.log('🔍 Current municipalities array:', municipalities);
+         console.log('🔍 Current localities array:', localities);
+         setFormData(formDataToSet);
+       }, 100);
       console.log('🔄 Setting imagePreviews with:', images);
       setImagePreviews(images);
       setOriginalImages(originalImages);
@@ -275,6 +407,7 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
          images: [],
          description: '',
          features: '',
+         characteristics: [],
          pricing: [{ hours: null, price: null }],
          status: 'Activo',
          yachtCategoryId: 0,
@@ -340,8 +473,18 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
       return;
     }
     
+    // Convert features string to characteristics array format for backend
+    const characteristicsArray = formData.features 
+      ? formData.features.split(',').map(feature => ({ name: feature.trim() })).filter(feature => feature.name !== '')
+      : [];
+    
+    console.log('🔍 Original features:', formData.features);
+    console.log('🔍 Converted characteristics:', characteristicsArray);
+    
     const dataToSend: any = {
       ...formData,
+      features: formData.features, // Keep features as string for backward compatibility
+      characteristics: characteristicsArray, // Send characteristics in the correct format for backend
       images: imagePreviews,
       userId: user.id, // Add userId to the data
       typeUser: user.role?.name // Add typeUser to the data
@@ -349,6 +492,10 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
 
     // Log the data being sent for debugging
     console.log('🚢 Data being sent to API:', dataToSend);
+    console.log('🚢 Features being sent:', dataToSend.features);
+    console.log('🚢 Features type:', typeof dataToSend.features);
+    console.log('🚢 Characteristics being sent:', dataToSend.characteristics);
+    console.log('🚢 Characteristics type:', typeof dataToSend.characteristics);
     console.log('👤 User ID (userId):', user.id);
     console.log('👤 User role (typeUser):', user.role?.name);
 
@@ -413,29 +560,40 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
   };
 
     const handleClose = () => {
-    setFormData({
-      name: '',
-      capacity: 1,
-      length: '',
-      location: '',
-      images: [],
-      description: '',
-      features: '',
-      pricing: [{ hours: null, price: null }],
-      status: 'Activo',
-      yachtCategoryId: 0,
-      stateId: 0,
-      municipalityId: 0,
-      localityId: 0
-    });
-    setImagePreviews([]);
-    setOriginalImages([]);
-    setDeletedImageIds([]);
-    setNewCharacteristic('');
-    setNewPricingPackage({ hours: null, price: null });
-    setIsLoading(false);
-    onClose();
-  };
+      // Set closing flag to prevent useEffect from running
+      setIsClosing(true);
+      
+      // Clear form data
+      setFormData({
+        name: '',
+        capacity: 1,
+        length: '',
+        location: '',
+        images: [],
+        description: '',
+        features: '',
+        characteristics: [],
+        pricing: [{ hours: null, price: null }],
+        status: 'Activo',
+        yachtCategoryId: 0,
+        stateId: 0,
+        municipalityId: 0,
+        localityId: 0
+      });
+      
+      // Clear image-related data
+      setImagePreviews([]);
+      setOriginalImages([]);
+      setDeletedImageIds([]);
+      setNewCharacteristic('');
+      setNewPricingPackage({ hours: null, price: null });
+      setIsLoading(false);
+      
+      // Don't clear location data arrays (states, municipalities, localities, yachtCategories)
+      // This way they remain available when reopening the modal
+      
+      onClose();
+    };
 
   if (!isOpen) return null;
 
@@ -496,10 +654,11 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                     value={formData.yachtCategoryId}
                     onChange={handleInputChange}
                     required
-                    disabled={isLoading || isLoadingCategories || !formData.stateId || !formData.municipalityId || !formData.localityId}
+                    disabled={isLoading || isLoadingCategories || (!editingYacht && (!formData.stateId || !formData.municipalityId || !formData.localityId))}
                   >
                     <option value={0}>
                       {isLoadingCategories ? 'Cargando categorías...' :
+                       editingYacht ? 'Seleccionar categoría' :
                        !formData.stateId ? 'Selecciona un estado primero' :
                        !formData.municipalityId ? 'Selecciona un municipio primero' :
                        !formData.localityId ? 'Selecciona una localidad primero' :
