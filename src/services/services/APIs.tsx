@@ -42,6 +42,12 @@ const APIs = {
     return ConfigurationAPIs.post(path, data);
   },
 
+
+  getCategoriesAll: async (userId: number, customPath?: string) => {
+    const path = customPath || 'yacht-categories/get-categories';
+    return ConfigurationAPIs.post(path, { userId });
+  },
+
   createYachtType: async (data: any, customPath?: string) => {
     const path = customPath || 'yacht-categories/create';
     return ConfigurationAPIs.post(path, data);

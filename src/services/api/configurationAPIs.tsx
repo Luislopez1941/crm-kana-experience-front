@@ -5,8 +5,8 @@ import type { AxiosInstance, AxiosResponse, AxiosRequestConfig } from 'axios';
 class ApiService {
   private axiosInstance: AxiosInstance;
 
-  // constructor(baseURL: string = 'https://crm-kana-experience-jet92.ondigitalocean.app/') {
-  constructor(baseURL: string = 'http://localhost:3000/') {
+  constructor(baseURL: string = 'https://crm-kana-experience-jet92.ondigitalocean.app/') {
+  // constructor(baseURL: string = 'http://localhost:3000/') {
     // constructor(baseURL: string = '') {
     this.axiosInstance = axios.create({
       baseURL,  

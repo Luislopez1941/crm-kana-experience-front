@@ -85,17 +85,8 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
   const fetchYachtCategories = async () => {
     setIsLoadingCategories(true);
     try {
-      // Use editing yacht data if available, otherwise use form data
-      const stateId = editingYacht?.stateId || formData.stateId;
-      const municipalityId = editingYacht?.municipalityId || formData.municipalityId;
-      const localityId = editingYacht?.localityId || formData.localityId;
-      
-      const response: any = await APIs.getAllYachtCategories({
-        userId: user.id, 
-        state: stateId, 
-        municipality: municipalityId, 
-        locality: localityId
-      });
+      // Use getCategoriesAll which only requires userId - no more location dependency
+      const response: any = await APIs.getCategoriesAll(user.id);
       if (response.data) {
         // If we're editing a yacht and it has a category, make sure it's included
         if (editingYacht?.yachtCategory) {
@@ -120,12 +111,8 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
     console.log('🔍 Fetching all categories for edit mode');
     setIsLoadingCategories(true);
     try {
-      const response: any = await APIs.getAllYachtCategories({
-        userId: user.id, 
-        state: editingYacht.stateId, 
-        municipality: editingYacht.municipalityId, 
-        locality: editingYacht.localityId
-      });
+      // Use getCategoriesAll which only requires userId - no more location dependency
+      const response: any = await APIs.getCategoriesAll(user.id);
       
       if (response.data) {
         console.log('🔍 Categories loaded for edit mode:', response.data);
@@ -257,6 +244,8 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
       if (!editingYacht) {
         // Only fetch states when creating a new yacht
         fetchStates();
+        // Also fetch categories for new yacht creation - no location dependency needed
+        fetchYachtCategories();
       } else {
         // If editing and we don't have location data loaded, load it
         if (states.length === 0) {
@@ -268,7 +257,7 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
         if (localities.length === 0 && editingYacht.municipalityId) {
           fetchLocalities(editingYacht.municipalityId);
         }
-        if (yachtCategories.length === 0 && editingYacht.stateId && editingYacht.municipalityId && editingYacht.localityId) {
+        if (yachtCategories.length === 0) {
           fetchYachtCategoriesForEdit();
         }
       }
@@ -299,12 +288,12 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
     }
   }, [formData.municipalityId, editingYacht]);
 
-  // Refetch yacht categories when location filters change (only for new yachts)
+  // Refetch yacht categories when modal opens for new yacht creation (no location dependency)
   useEffect(() => {
-    if (!editingYacht && user?.id && (formData.stateId > 0 || formData.municipalityId > 0 || formData.localityId > 0)) {
+    if (!editingYacht && user?.id && yachtCategories.length === 0) {
       fetchYachtCategories();
     }
-  }, [formData.stateId, formData.municipalityId, formData.localityId, editingYacht]);
+  }, [editingYacht, user?.id, yachtCategories.length]);
 
   useEffect(() => {
     if (editingYacht) {
@@ -626,190 +615,186 @@ const YachtModal: React.FC<CreateYachtModalProps> = ({ isOpen, onClose, onSucces
                 <h3>Información Básica</h3>
               </div>
               
-              <div className="yacht-modal__form-grid">
-                <div className="yacht-modal__form-group">
-                 <label htmlFor="name">Nombre del Yate *</label>
-                  <div className="yacht-modal__input-wrapper">
-                    <span className="yacht-modal__input-icon material-icons">sailing</span>
-                 <input
-                   type="text"
-                   id="name"
-                   name="name"
-                   value={formData.name}
-                   onChange={handleInputChange}
-                   placeholder="Ej: Ocean Paradise"
-                   required
-                   disabled={isLoading}
-                 />
-                  </div>
-               </div>
-
-                <div className="yacht-modal__form-group">
-                                     <label htmlFor="yachtCategoryId">Categoría *</label>
-                  <div className="yacht-modal__input-wrapper">
-                    <span className="yacht-modal__input-icon material-icons">category</span>
-                  <select
-                    id="yachtCategoryId"
-                    name="yachtCategoryId"
-                    value={formData.yachtCategoryId}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isLoading || isLoadingCategories || (!editingYacht && (!formData.stateId || !formData.municipalityId || !formData.localityId))}
-                  >
-                    <option value={0}>
-                      {isLoadingCategories ? 'Cargando categorías...' :
-                       editingYacht ? 'Seleccionar categoría' :
-                       !formData.stateId ? 'Selecciona un estado primero' :
-                       !formData.municipalityId ? 'Selecciona un municipio primero' :
-                       !formData.localityId ? 'Selecciona una localidad primero' :
-                       yachtCategories.length === 0 ? 'No hay categorías disponibles para esta ubicación' :
-                       'Seleccionar categoría'}
-                    </option>
-                    {yachtCategories.map(category => (
-                      <option key={category.id} value={category.id}>{category.name}</option>
-                    ))}
-                  </select>
-                  </div>
-                </div>
-
-                <div className="yacht-modal__form-group">
-                  <label htmlFor="capacity">Capacidad *</label>
-                  <div className="yacht-modal__input-wrapper">
-                    <span className="yacht-modal__input-icon material-icons">group</span>
+                             <div className="yacht-modal__form-grid">
+                 <div className="yacht-modal__form-group">
+                  <label htmlFor="name">Nombre del Yate *</label>
+                   <div className="yacht-modal__input-wrapper">
+                     <span className="yacht-modal__input-icon material-icons">sailing</span>
                   <input
-                    type="number"
-                    id="capacity"
-                    name="capacity"
-                    value={formData.capacity}
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="Ej: 8"
-                    min="1"
+                    placeholder="Ej: Ocean Paradise"
                     required
                     disabled={isLoading}
                   />
-                    <span className="yacht-modal__input-suffix">personas</span>
-                  </div>
+                   </div>
                 </div>
 
-                <div className="yacht-modal__form-group">
-                  <label htmlFor="length">Eslora *</label>
-                  <div className="yacht-modal__input-wrapper">
-                    <span className="yacht-modal__input-icon material-icons">straighten</span>
-                    <input
-                      type="text"
-                      id="length"
-                      name="length"
-                      value={formData.length}
-                      onChange={handleInputChange}
-                      placeholder="Ej: 25 metros"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
+                 <div className="yacht-modal__form-group">
+                   <label htmlFor="stateId">Estado *</label>
+                   <div className="yacht-modal__input-wrapper">
+                     <span className="yacht-modal__input-icon material-icons">location_on</span>
+                     <select
+                       id="stateId"
+                       name="stateId"
+                       value={formData.stateId}
+                       onChange={handleInputChange}
+                       required
+                       disabled={isLoading || isLoadingStates}
+                     >
+                       <option value="">
+                         {isLoadingStates ? 'Cargando estados...' : 'Seleccionar estado'}
+                       </option>
+                       {states.map(state => (
+                         <option key={state.id} value={state.id}>{state.name}</option>
+                       ))}
+                     </select>
+                   </div>
+                 </div>
 
-                <div className="yacht-modal__form-group">
-                  <label htmlFor="stateId">Estado *</label>
-                  <div className="yacht-modal__input-wrapper">
-                    <span className="yacht-modal__input-icon material-icons">location_on</span>
-                    <select
-                      id="stateId"
-                      name="stateId"
-                      value={formData.stateId}
-                      onChange={handleInputChange}
-                      required
-                      disabled={isLoading || isLoadingStates}
-                    >
-                      <option value="">
-                        {isLoadingStates ? 'Cargando estados...' : 'Seleccionar estado'}
-                      </option>
-                      {states.map(state => (
-                        <option key={state.id} value={state.id}>{state.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                 <div className="yacht-modal__form-group">
+                   <label htmlFor="municipalityId">Municipio *</label>
+                   <div className="yacht-modal__input-wrapper">
+                     <span className="yacht-modal__input-icon material-icons">location_city</span>
+                     <select
+                       id="municipalityId"
+                       name="municipalityId"
+                       value={formData.municipalityId}
+                       onChange={handleInputChange}
+                       required
+                       disabled={isLoading || isLoadingMunicipalities || !formData.stateId}
+                     >
+                       <option value="">
+                         {isLoadingMunicipalities ? 'Cargando municipios...' : 
+                          !formData.stateId ? 'Selecciona un estado primero' : 'Seleccionar municipio'}
+                       </option>
+                       {municipalities.map(municipality => (
+                         <option key={municipality.id} value={municipality.id}>{municipality.name}</option>
+                       ))}
+                     </select>
+                   </div>
+                 </div>
 
-                <div className="yacht-modal__form-group">
-                  <label htmlFor="municipalityId">Municipio *</label>
-                  <div className="yacht-modal__input-wrapper">
-                    <span className="yacht-modal__input-icon material-icons">location_city</span>
-                    <select
-                      id="municipalityId"
-                      name="municipalityId"
-                      value={formData.municipalityId}
-                      onChange={handleInputChange}
-                      required
-                      disabled={isLoading || isLoadingMunicipalities || !formData.stateId}
-                    >
-                      <option value="">
-                        {isLoadingMunicipalities ? 'Cargando municipios...' : 
-                         !formData.stateId ? 'Selecciona un estado primero' : 'Seleccionar municipio'}
-                      </option>
-                      {municipalities.map(municipality => (
-                        <option key={municipality.id} value={municipality.id}>{municipality.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                 <div className="yacht-modal__form-group">
+                   <label htmlFor="localityId">Localidad *</label>
+                   <div className="yacht-modal__input-wrapper">
+                     <span className="yacht-modal__input-icon material-icons">location_on</span>
+                     <select
+                       id="localityId"
+                       name="localityId"
+                       value={formData.localityId}
+                       onChange={handleInputChange}
+                       required
+                       disabled={isLoading || isLoadingLocalities || !formData.municipalityId}
+                     >
+                       <option value="">
+                         {isLoadingLocalities ? 'Cargando localidades...' : 
+                          !formData.municipalityId ? 'Selecciona un municipio primero' : 'Seleccionar localidad'}
+                       </option>
+                       {localities.map(locality => (
+                         <option key={locality.id} value={locality.id}>{locality.name}</option>
+                       ))}
+                     </select>
+                   </div>
+                 </div>
 
-                <div className="yacht-modal__form-group">
-                  <label htmlFor="localityId">Localidad *</label>
-                  <div className="yacht-modal__input-wrapper">
-                    <span className="yacht-modal__input-icon material-icons">location_on</span>
-                    <select
-                      id="localityId"
-                      name="localityId"
-                      value={formData.localityId}
-                      onChange={handleInputChange}
-                      required
-                      disabled={isLoading || isLoadingLocalities || !formData.municipalityId}
-                    >
-                      <option value="">
-                        {isLoadingLocalities ? 'Cargando localidades...' : 
-                         !formData.municipalityId ? 'Selecciona un municipio primero' : 'Seleccionar localidad'}
-                      </option>
-                      {localities.map(locality => (
-                        <option key={locality.id} value={locality.id}>{locality.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                 <div className="yacht-modal__form-group">
+                                      <label htmlFor="yachtCategoryId">Categoría *</label>
+                   <div className="yacht-modal__input-wrapper">
+                     <span className="yacht-modal__input-icon material-icons">category</span>
+                   <select
+                     id="yachtCategoryId"
+                     name="yachtCategoryId"
+                     value={formData.yachtCategoryId}
+                     onChange={handleInputChange}
+                     required
+                     disabled={isLoading || isLoadingCategories}
+                   >
+                     <option value={0}>
+                       {isLoadingCategories ? 'Cargando categorías...' :
+                        yachtCategories.length === 0 ? 'No hay categorías disponibles' :
+                        'Seleccionar categoría'}
+                     </option>
+                     {yachtCategories.map(category => (
+                       <option key={category.id} value={category.id}>{category.name}</option>
+                     ))}
+                   </select>
+                   </div>
+                 </div>
 
-                <div className="yacht-modal__form-group">
-                  <label htmlFor="location">Ubicación Específica</label>
-                  <div className="yacht-modal__input-wrapper">
-                    <span className="yacht-modal__input-icon material-icons">business</span>
-                    <input
-                      type="text"
-                      id="location"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      placeholder="Ej: Marina Cancún, Puerto Juárez"
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
+                 <div className="yacht-modal__form-group">
+                   <label htmlFor="capacity">Capacidad *</label>
+                   <div className="yacht-modal__input-wrapper">
+                     <span className="yacht-modal__input-icon material-icons">group</span>
+                   <input
+                     type="number"
+                     id="capacity"
+                     name="capacity"
+                     value={formData.capacity}
+                     onChange={handleInputChange}
+                     placeholder="Ej: 8"
+                     min="1"
+                     required
+                     disabled={isLoading}
+                   />
+                     <span className="yacht-modal__input-suffix">personas</span>
+                   </div>
+                 </div>
 
-                <div className="yacht-modal__form-group">
-                  <label htmlFor="status">Estado</label>
-                  <div className="yacht-modal__input-wrapper">
-                    <span className="yacht-modal__input-icon material-icons">check_circle</span>
-                    <select
-                      id="status"
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      disabled={isLoading}
-                    >
-                      <option value="Activo">Activo</option>
-                      <option value="Inactivo">Inactivo</option>
-                      <option value="Mantenimiento">Mantenimiento</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+                                   <div className="yacht-modal__form-group">
+                    <label htmlFor="length">Pies *</label>
+                   <div className="yacht-modal__input-wrapper">
+                     <span className="yacht-modal__input-icon material-icons">straighten</span>
+                     <input
+                       type="text"
+                       id="length"
+                       name="length"
+                       value={formData.length}
+                       onChange={handleInputChange}
+                       placeholder="Ej: 25 metros"
+                       required
+                       disabled={isLoading}
+                     />
+                   </div>
+                 </div>
+
+                 <div className="yacht-modal__form-group">
+                   <label htmlFor="location">Ubicación Específica</label>
+                   <div className="yacht-modal__input-wrapper">
+                     <span className="yacht-modal__input-icon material-icons">business</span>
+                     <input
+                       type="text"
+                       id="location"
+                       name="location"
+                       value={formData.location}
+                       onChange={handleInputChange}
+                       placeholder="Ej: Marina Cancún, Puerto Juárez"
+                       disabled={isLoading}
+                     />
+                   </div>
+                 </div>
+
+                 <div className="yacht-modal__form-group">
+                   <label htmlFor="status">Estado</label>
+                   <div className="yacht-modal__input-wrapper">
+                     <span className="yacht-modal__input-icon material-icons">check_circle</span>
+                     <select
+                       id="status"
+                       name="status"
+                       value={formData.status}
+                       onChange={handleInputChange}
+                       disabled={isLoading}
+                     >
+                       <option value="Activo">Activo</option>
+                       <option value="Inactivo">Inactivo</option>
+                       <option value="Mantenimiento">Mantenimiento</option>
+                     </select>
+                   </div>
+                 </div>
+               </div>
             </div>
 
             {/* Pricing Section */}
