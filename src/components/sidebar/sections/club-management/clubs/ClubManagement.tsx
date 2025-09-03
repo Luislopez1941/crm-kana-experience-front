@@ -72,6 +72,8 @@ const ClubManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching club types:', error);
+      // Set empty array as fallback to prevent further errors
+      setClubTypes([]);
     }
   };
 
@@ -131,7 +133,7 @@ const ClubManagement: React.FC = () => {
       filtered = filtered.filter(club =>
         club.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         club.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        club.type.name.toLowerCase().includes(searchTerm.toLowerCase())
+        club.type?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -280,7 +282,7 @@ const ClubManagement: React.FC = () => {
                     </div>
                   </div>
                   <div className="club-management-page__grid-cell club-management-page__type-cell">
-                    {club.type.name}
+                    {club.type?.name || 'Sin tipo'}
                   </div>
                   <div className="club-management-page__grid-cell club-management-page__location-cell">
                     <span className="material-icons sm">location_on</span>
@@ -356,7 +358,7 @@ const ClubManagement: React.FC = () => {
                     <div className="club-management-page__card-header">
                       <h3 className="club-management-page__club-name">{club.name}</h3>
                       <span className="club-management-page__club-type">
-                        {club.type.name}
+                        {club.type?.name || 'Sin tipo'}
                       </span>
                     </div>
 
@@ -398,6 +400,13 @@ const ClubManagement: React.FC = () => {
                       >
                         <span className="material-icons sm">edit</span>
                         Editar
+                      </button>
+                      <button
+                        className="club-management-page__btn club-management-page__btn-danger club-management-page__btn-sm"
+                        onClick={() => handleDelete(club.id)}
+                      >
+                        <span className="material-icons sm">delete</span>
+                        Eliminar
                       </button>
                     </div>
                   </div>

@@ -137,6 +137,105 @@
   padding: 0;
 }
 
+/* Image Dropzone Styles */
+.tour-type-modal .image-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: var(--background-secondary);
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tour-type-modal .image-dropzone:hover {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.tour-type-modal .image-dropzone.drag-active {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+  transform: scale(1.02);
+}
+
+.tour-type-modal .image-dropzone.has-image {
+  padding: 0;
+  border: 2px solid var(--border);
+  background-color: var(--background);
+}
+
+.tour-type-modal .dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--text-secondary);
+}
+
+.tour-type-modal .dropzone-content .material-icons {
+  font-size: 2rem;
+  color: var(--text-muted);
+}
+
+.tour-type-modal .dropzone-content p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.tour-type-modal .dropzone-content small {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.tour-type-modal .image-preview-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.tour-type-modal .image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.tour-type-modal .remove-image-btn {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.tour-type-modal .remove-image-btn:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.tour-type-modal .remove-image-btn .material-icons {
+  font-size: 18px;
+}
+
 /* Modal Actions */
 .tour-type-modal .modal-actions {
   display: flex;

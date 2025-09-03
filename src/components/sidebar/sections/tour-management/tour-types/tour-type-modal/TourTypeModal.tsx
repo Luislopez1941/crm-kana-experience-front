@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { usePopupStore } from '../../../../../../zustand/popupStore';
 import useUserStore from '../../../../../../zustand/useUserStore';
 import APIs from '../../../../../../services/services/APIs';
@@ -28,6 +29,7 @@ interface TourTypeModalProps {
 
 interface TourTypeForm {
   name: string;
+  image?: string;
   stateId: number;
   municipalityId: number;
   localityId: number;
@@ -44,6 +46,7 @@ const TourTypeModal: React.FC<TourTypeModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<TourTypeForm>({
     name: '',
+    image: undefined,
     stateId: 0,
     municipalityId: 0,
     localityId: 0
@@ -55,6 +58,41 @@ const TourTypeModal: React.FC<TourTypeModalProps> = ({
   const [isLoadingStates, setIsLoadingStates] = useState(false);
   const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false);
   const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Dropzone configuration for image upload
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        setImagePreview(base64String);
+        setFormData(prev => ({
+          ...prev,
+          image: base64String
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp']
+    },
+    maxFiles: 1,
+    maxSize: 8 * 1024 * 1024 // 8MB
+  });
+
+  const removeImage = () => {
+    setImagePreview(null);
+    setFormData(prev => ({
+      ...prev,
+      image: undefined
+    }));
+  };
 
   // Fetch states
   const fetchStates = useCallback(async () => {
@@ -135,10 +173,18 @@ const TourTypeModal: React.FC<TourTypeModalProps> = ({
     if (editingType) {
       setFormData({
         name: editingType.name,
+        image: editingType.image || undefined,
         stateId: editingType.stateId || 0,
         municipalityId: editingType.municipalityId || 0,
         localityId: editingType.localityId || 0
       });
+      
+      // Set image preview if editing
+      if (editingType.image) {
+        setImagePreview(editingType.image);
+      } else {
+        setImagePreview(null);
+      }
       
       // Load municipalities and localities if editing
       if (editingType.stateId) {
@@ -150,10 +196,12 @@ const TourTypeModal: React.FC<TourTypeModalProps> = ({
     } else {
       setFormData({
         name: '',
+        image: undefined,
         stateId: 0,
         municipalityId: 0,
         localityId: 0
       });
+      setImagePreview(null);
     }
     setErrors({});
   }, [editingType, isOpen, fetchMunicipalities, fetchLocalities]);
@@ -246,10 +294,12 @@ const TourTypeModal: React.FC<TourTypeModalProps> = ({
   const handleClose = () => {
     setFormData({ 
       name: '',
+      image: undefined,
       stateId: 0,
       municipalityId: 0,
       localityId: 0
     });
+    setImagePreview(null);
     setErrors({});
     setIsLoading(false);
     onClose();
@@ -291,6 +341,41 @@ const TourTypeModal: React.FC<TourTypeModalProps> = ({
                 {errors.name && (
                   <p className="form-error">{errors.name}</p>
                 )}
+              </div>
+
+              <div className="form-group">
+                <label>Imagen de la Categoría</label>
+                <div 
+                  {...getRootProps()} 
+                  className={`image-dropzone ${isDragActive ? 'drag-active' : ''} ${imagePreview ? 'has-image' : ''}`}
+                >
+                  <input {...getInputProps()} />
+                  {imagePreview ? (
+                    <div className="image-preview-container">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="image-preview"
+                      />
+                      <button
+                        type="button"
+                        className="remove-image-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeImage();
+                        }}
+                      >
+                        <span className="material-icons">close</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="dropzone-content">
+                      <span className="material-icons">cloud_upload</span>
+                      <p>{isDragActive ? 'Suelta la imagen aquí' : 'Haz clic o arrastra una imagen aquí'}</p>
+                      <small>Formatos: JPG, PNG, GIF, WEBP (máx. 8MB)</small>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="form-group">

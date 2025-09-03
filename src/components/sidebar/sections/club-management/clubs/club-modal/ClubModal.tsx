@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { usePopupStore } from '../../../../../../zustand/popupStore';
+import { getUserId } from '../../../../../../utils/token.utility';
 
 import APIs from '../../../../../../services/services/APIs';
 import './styles/ClubModal.css';
@@ -17,10 +18,11 @@ interface ClubForm {
   description?: string;
   address?: string;
   phone?: string;
-  typeId: number;
+  typeId?: number;
   stateId: number;
   municipalityId: number;
   localityId: number;
+  userId: number;
   images: string[];
 }
 
@@ -38,10 +40,11 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
     description: '',
     address: '',
     phone: '',
-    typeId: 0,
+    typeId: undefined,
     stateId: 0,
     municipalityId: 0,
     localityId: 0,
+    userId: getUserId() || 0,
     images: []
   });
 
@@ -63,6 +66,8 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
       }
     } catch (error) {
       console.error('Error fetching club types:', error);
+      // Set empty array as fallback to prevent further errors
+      setClubTypes([]);
     } finally {
       setIsLoadingTypes(false);
     }
@@ -149,6 +154,7 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
         stateId: editingClub.stateId || 0,
         municipalityId: editingClub.municipalityId || 0,
         localityId: editingClub.localityId || 0,
+        userId: getUserId() || 0,
         images: images
       });
 
@@ -169,10 +175,11 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
         description: '',
         address: '',
         phone: '',
-        typeId: 0,
+        typeId: undefined,
         stateId: 0,
         municipalityId: 0,
         localityId: 0,
+        userId: getUserId() || 0,
         images: []
       });
       setImagePreviews([]);
@@ -270,7 +277,7 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
 
     try {
       // Validate required fields
-      if (!formData.name || !formData.typeId || !formData.stateId || !formData.municipalityId || !formData.localityId) {
+      if (!formData.name || !formData.stateId || !formData.municipalityId || !formData.localityId || !formData.userId) {
         showError('Por favor completa todos los campos requeridos');
         return;
       }
@@ -309,10 +316,11 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
       description: '',
       address: '',
       phone: '',
-      typeId: 0,
+      typeId: undefined,
       stateId: 0,
       municipalityId: 0,
       localityId: 0,
+      userId: getUserId() || 0,
       images: []
     });
     setImagePreviews([]);
@@ -365,15 +373,14 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
                 </div>
 
                 <div className="club-modal__form-group">
-                  <label htmlFor="typeId">Tipo de Club *</label>
+                  <label htmlFor="typeId">Tipo de Club</label>
                   <div className="club-modal__input-wrapper">
                     <span className="club-modal__input-icon material-icons">category</span>
                     <select
                       id="typeId"
                       name="typeId"
-                      value={formData.typeId}
+                      value={formData.typeId || ''}
                       onChange={handleInputChange}
-                      required
                       disabled={isLoading || isLoadingTypes}
                     >
                       <option value="">
@@ -573,7 +580,7 @@ const ClubModal: React.FC<CreateClubModalProps> = ({ isOpen, onClose, onSuccess,
                 <button
                   type="submit"
                   className="club-modal__btn club-modal__btn-primary"
-                  disabled={isLoading || !formData.name || !formData.typeId || !formData.stateId || !formData.municipalityId || !formData.localityId}
+                  disabled={isLoading || !formData.name || !formData.stateId || !formData.municipalityId || !formData.localityId || !formData.userId}
                 >
                   {isLoading ? (
                     <>
