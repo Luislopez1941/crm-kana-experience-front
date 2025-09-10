@@ -170,6 +170,223 @@
   margin: 0 0 var(--spacing-2xl) 0;
 }
 
+/* Type Selection Container */
+.type-selection-container {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.type-selection-container .form-group {
+  max-width: 400px;
+}
+
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select-wrapper .material-icons {
+  position: absolute;
+  right: var(--spacing-md);
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.type-select {
+  width: 100%;
+  padding: var(--spacing-md);
+  padding-right: 3rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--background);
+  color: var(--text);
+  font-size: var(--font-size-base);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.type-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.type-select option {
+  padding: var(--spacing-sm);
+  background-color: var(--background);
+  color: var(--text);
+}
+
+/* Items Selection */
+.items-selection {
+  margin-top: var(--spacing-2xl);
+}
+
+.items-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  margin: 0 0 var(--spacing-lg) 0;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-2xl);
+  color: var(--text-secondary);
+}
+
+.loading .material-icons {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.no-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-2xl);
+  text-align: center;
+  color: var(--text-secondary);
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.no-items .material-icons {
+  font-size: 3rem;
+  color: var(--text-muted);
+}
+
+.no-items p {
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+/* Items Grid */
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.item-card {
+  background-color: var(--background);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
+}
+
+.item-card:hover:not(.unavailable) {
+  border-color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px var(--shadow);
+}
+
+.item-card.unavailable {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.item-image {
+  position: relative;
+  height: 150px;
+  overflow: hidden;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.item-card:hover:not(.unavailable) .item-image img {
+  transform: scale(1.05);
+}
+
+.item-info {
+  padding: var(--spacing-md);
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+}
+
+.item-name {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  margin: 0;
+}
+
+.item-type {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  background-color: var(--background-secondary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+}
+
+.item-description {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-lg) 0;
+  line-height: 1.5;
+}
+
+.item-details {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.item-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-lg);
+}
+
+.select-item-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.select-item-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 102, 233, 0.4);
+}
+
 /* Yacht Selection Grid */
 .yachts-grid {
   display: grid;
@@ -231,6 +448,26 @@
 }
 
 .unavailable-overlay .material-icons {
+  font-size: 2rem;
+}
+
+.pending-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 193, 7, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  gap: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.pending-overlay .material-icons {
   font-size: 2rem;
 }
 
@@ -356,7 +593,8 @@
   color: var(--primary);
 }
 
-.selected-yacht-summary {
+.selected-yacht-summary,
+.selected-item-summary {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -364,7 +602,8 @@
   color: var(--text);
 }
 
-.selected-yacht-summary .price {
+.selected-yacht-summary .price,
+.selected-item-summary .price {
   color: var(--primary);
   font-weight: var(--font-weight-semibold);
 }
@@ -536,6 +775,11 @@
     margin: 0 var(--spacing-sm);
   }
   
+  .type-selection-container .form-group {
+    max-width: 100%;
+  }
+  
+  .items-grid,
   .yachts-grid {
     grid-template-columns: 1fr;
   }
@@ -564,10 +808,12 @@
 }
 
 @media (max-width: 480px) {
+  .item-image,
   .yacht-image {
     height: 150px;
   }
   
+  .item-details,
   .yacht-details {
     flex-direction: column;
     gap: var(--spacing-sm);

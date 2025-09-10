@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import APIs from '../services/services/APIs';
 
 export interface Yacht {
   id: string;
@@ -37,6 +38,7 @@ interface ReservationStore {
   filteredReservations: Reservation[];
   searchTerm: string;
   statusFilter: string;
+  loading: boolean;
   
   // Yachts
   yachts: Yacht[];
@@ -47,6 +49,7 @@ interface ReservationStore {
   deleteReservation: (id: string) => void;
   setSearchTerm: (term: string) => void;
   setStatusFilter: (status: string) => void;
+  loadReservations: () => Promise<void>;
   
   // Yacht actions
   addYacht: (yacht: Omit<Yacht, 'id'>) => void;
@@ -132,45 +135,14 @@ const mockYachts: Yacht[] = [
   }
 ];
 
-const mockReservations: Reservation[] = [
-  {
-    id: '1',
-    yachtId: '1',
-    yachtName: 'Luxury Pearl',
-    clientName: 'Carlos Mendoza',
-    clientEmail: 'carlos@email.com',
-    clientPhone: '+34 666 777 888',
-    startDate: '2024-03-15',
-    endDate: '2024-03-20',
-    totalDays: 5,
-    totalPrice: 12500,
-    status: 'confirmed',
-    createdAt: '2024-01-15T10:00:00Z',
-    notes: 'Cliente VIP, requiere champagne de bienvenida'
-  },
-  {
-    id: '2',
-    yachtId: '2',
-    yachtName: 'Ocean Dream',
-    clientName: 'Ana Rodríguez',
-    clientEmail: 'ana@email.com',
-    clientPhone: '+34 655 444 333',
-    startDate: '2024-03-22',
-    endDate: '2024-03-25',
-    totalDays: 3,
-    totalPrice: 5400,
-    status: 'pending',
-    createdAt: '2024-01-10T14:30:00Z',
-    notes: 'Celebración de aniversario'
-  }
-];
 
 export const useReservationStore = create<ReservationStore>((set, get) => ({
   // Initial state
-  reservations: mockReservations,
-  filteredReservations: mockReservations,
+  reservations: [],
+  filteredReservations: [],
   searchTerm: '',
   statusFilter: '',
+  loading: false,
   yachts: mockYachts,
 
   // Reservation actions
@@ -224,6 +196,63 @@ export const useReservationStore = create<ReservationStore>((set, get) => ({
       statusFilter: status,
       filteredReservations: get().filterReservations(state.reservations, state.searchTerm, status)
     }));
+  },
+
+  loadReservations: async () => {
+    console.log('🚀 loadReservations called');
+    set({ loading: true });
+    try {
+      console.log('📡 Calling APIs.getAllReservations()...');
+      const response = await APIs.getAllReservations();
+      console.log('📦 Reservations response:', response);
+      
+      if (response && (response as any).data) {
+        console.log('✅ Response has data, mapping reservations...');
+        console.log('📊 Raw data from API:', (response as any).data);
+        
+        // Mapear los datos de la API al formato del store
+        const apiReservations = (response as any).data.map((reservation: any) => {
+          console.log('🔄 Mapping reservation:', reservation);
+          return {
+            id: reservation.id.toString(),
+            yachtId: reservation.yachtId?.toString() || reservation.productId?.toString() || '',
+            yachtName: reservation.yacht?.name || `Yate ID: ${reservation.yachtId || reservation.productId}`,
+            clientName: `${reservation.firstName} ${reservation.lastName}`,
+            clientEmail: reservation.email,
+            clientPhone: reservation.phone,
+            startDate: reservation.reservationDate,
+            endDate: reservation.reservationDate, // Mismo día por ahora
+            totalDays: 1,
+            totalPrice: 0, // TODO: Calcular precio real
+            status: reservation.status,
+            createdAt: reservation.createdAt,
+            notes: reservation.description,
+            // Información adicional del folio y yate
+            folioId: reservation.folioId,
+            folio: reservation.folio,
+            yacht: reservation.yacht,
+            type: reservation.type,
+            productId: reservation.productId,
+            userId: reservation.userId,
+            qr: reservation.qr
+          };
+        });
+
+        console.log('🔄 Mapped reservations:', apiReservations);
+        set((state) => ({
+          reservations: apiReservations,
+          filteredReservations: get().filterReservations(apiReservations, state.searchTerm, state.statusFilter),
+          loading: false
+        }));
+        console.log('✅ Reservations loaded successfully');
+      } else {
+        console.log('❌ No data in response');
+        set({ loading: false });
+      }
+    } catch (error) {
+      console.error('💥 Error loading reservations:', error);
+      set({ loading: false });
+    }
   },
 
   // Yacht actions

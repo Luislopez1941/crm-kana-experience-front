@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useReservationStore } from '../../../../zustand/reservationStore';
+import APIs from '../../../../services/services/APIs';
+
+// Debug: Verificar qué se está importando
+console.log('🔍 APIs object:', APIs);
+console.log('🔍 APIs.getAllReservations:', APIs.getAllReservations);
+console.log('🔍 typeof APIs.getAllReservations:', typeof APIs.getAllReservations);
 import ReservationModal from './reservation-modal/ReservationModal';
+import EditReservationModal from './edit-reservation-modal/EditReservationModal';
 import './styles/Reservations.css';
 
 const Reservaciones: React.FC = () => {
+  console.log('🏗️ Reservaciones component rendering...');
   const navigate = useNavigate();
   const {
     filteredReservations,
@@ -12,9 +20,38 @@ const Reservaciones: React.FC = () => {
     searchTerm,
     setSearchTerm,
     statusFilter,
-    setStatusFilter
+    setStatusFilter,
+    loadReservations,
+    loading
   } = useReservationStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState<any>(null);
+
+  // Cargar reservaciones al montar el componente
+  useEffect(() => {
+    console.log('🔄 Reservations component mounted, calling loadReservations...');
+    console.log('🔍 loadReservations function:', loadReservations);
+    
+    // Llamada directa a la API para debuggear
+    const loadReservationsDirect = async () => {
+      try {
+        console.log('🚀 DIRECT API CALL - Calling APIs.getAllReservations()...');
+        const response = await APIs.getAllReservations();
+        console.log('📦 DIRECT API RESPONSE:', response);
+      } catch (error) {
+        console.error('💥 DIRECT API ERROR:', error);
+      }
+    };
+    
+    loadReservationsDirect();
+    
+    if (typeof loadReservations === 'function') {
+      loadReservations();
+    } else {
+      console.error('❌ loadReservations is not a function!');
+    }
+  }, []); // Remover loadReservations de las dependencias para evitar loops
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -51,6 +88,18 @@ const Reservaciones: React.FC = () => {
     }).format(price);
   };
 
+  const handleEditReservation = (reservation: any) => {
+    setSelectedReservation(reservation);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedReservation(null);
+  };
+
+  console.log('📊 Current state - loading:', loading, 'filteredReservations:', filteredReservations.length);
+
   return (
     <div className="reservaciones-page">
       {/* Page Header */}
@@ -64,13 +113,33 @@ const Reservaciones: React.FC = () => {
             Administra todas las reservas de yates y crea nuevas reservaciones
           </p>
         </div>
-        <button 
-          className="btn btn-primary create-btn"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <span className="material-icons">add_circle</span>
-          Nueva Reserva
-        </button>
+        <div className="header-actions">
+          <button
+            className="btn btn-secondary"
+            onClick={async () => {
+              console.log('🔄 Manual reload triggered');
+              try {
+                console.log('🚀 MANUAL API CALL - Calling APIs.getAllReservations()...');
+                const response = await APIs.getAllReservations();
+                console.log('📦 MANUAL API RESPONSE:', response);
+              } catch (error) {
+                console.error('💥 MANUAL API ERROR:', error);
+              }
+              loadReservations();
+            }}
+            disabled={loading}
+          >
+            <span className="material-icons">refresh</span>
+            {loading ? 'Cargando...' : 'Recargar'}
+          </button>
+          <button 
+            className="btn btn-primary create-btn"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <span className="material-icons">add_circle</span>
+            Nueva Reserva
+          </button>
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -108,7 +177,14 @@ const Reservaciones: React.FC = () => {
           </div>
         </div>
 
-        {filteredReservations.length === 0 ? (
+        {loading ? (
+          <div className="loading-container">
+            <div className="loading">
+              <span className="material-icons">refresh</span>
+              <span>Cargando reservaciones...</span>
+            </div>
+          </div>
+        ) : filteredReservations.length === 0 ? (
           <div className="empty-state">
             <span className="material-icons">event_busy</span>
             <h3>No hay reservas registradas</h3>
@@ -164,7 +240,11 @@ const Reservaciones: React.FC = () => {
                         >
                           <span className="material-icons">visibility</span>
                         </button>
-                        <button className="action-btn" title="Editar">
+                        <button 
+                          className="action-btn" 
+                          title="Editar"
+                          onClick={() => handleEditReservation(reservation)}
+                        >
                           <span className="material-icons">edit</span>
                         </button>
                         {reservation.status === 'pending' && (
@@ -289,6 +369,13 @@ const Reservaciones: React.FC = () => {
       <ReservationModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      {/* Edit Reservation Modal */}
+      <EditReservationModal 
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        reservation={selectedReservation}
       />
     </div>
   );

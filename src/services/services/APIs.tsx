@@ -18,6 +18,16 @@ const APIs = {
     return ConfigurationAPIs.post(path, data);
   },
 
+  getYachtsAll: async (data: any, customPath?: string) => {
+    const path = customPath || 'yachts/get-all';
+    return ConfigurationAPIs.post(path, data);
+  },
+  
+
+  getYachtsById: async (id: any) => {
+    const path = `yachts/get-yacht-by-id/${id}`;
+    return ConfigurationAPIs.get(path);
+},
 
   getYachtByYachtCategory: async (yachtCategoryId: any, page: number = 1) => {
     const path = `yachts/by-category`;
@@ -235,12 +245,21 @@ const APIs = {
     return ConfigurationAPIs.delete(path);
   },
 
+  // Reservations
+  createReservation: async (data: any, customPath?: string) => {
+    const path = customPath || 'reservations/create';
+    return ConfigurationAPIs.post(path, data);
+  },
+  
+  getAllReservations: async (customPath?: string) => {
+    const path = customPath || 'reservations/get-all';
+    return ConfigurationAPIs.get(path);
+  },
+
+  updateReservation: async (id: number, data: any, customPath?: string) => {
+    const path = customPath || `reservations/update/${id}`;
+    return ConfigurationAPIs.patch(path, data);
+  }
 }
 
-
-
-
 export default APIs;
-
-
-

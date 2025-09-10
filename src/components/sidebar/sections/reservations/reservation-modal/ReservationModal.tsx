@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useReservationStore } from '../../../../../zustand/reservationStore';
+import APIs from '../../../../../services/services/APIs';
 import './styles/ReservationModal.css';
 
 interface CreateReservationModalProps {
@@ -8,112 +9,98 @@ interface CreateReservationModalProps {
 }
 
 interface ReservationForm {
-  selectedYacht: any;
-  clientName: string;
-  clientEmail: string;
-  clientPhone: string;
-  startDate: string;
-  endDate: string;
-  notes: string;
+  selectedType: 'yacht' | 'tour' | 'club' | '';
+  selectedItem: any;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  reservationDate: string;
+  quantity: number;
+  description: string;
 }
 
 const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClose }) => {
-  const { yachts, addReservation } = useReservationStore();
+  const { addReservation } = useReservationStore();
   const [currentStep, setCurrentStep] = useState(1);
-  // Datos temporales aleatorios para pruebas
-  const tempClients = [
-    {
-      name: 'Juan Carlos Pérez',
-      email: 'juan.perez@email.com',
-      phone: '+34 666 123 456',
-      notes: 'Reserva de prueba - Celebración familiar'
-    },
-    {
-      name: 'María González López',
-      email: 'maria.gonzalez@outlook.com',
-      phone: '+34 678 987 654',
-      notes: 'Evento corporativo - Reunión de empresa'
-    },
-    {
-      name: 'Roberto Martín Silva',
-      email: 'roberto.martin@gmail.com',
-      phone: '+34 645 321 789',
-      notes: 'Cumpleaños especial - Necesita catering'
-    },
-    {
-      name: 'Carmen Ruiz Fernández',
-      email: 'carmen.ruiz@hotmail.com',
-      phone: '+34 612 456 789',
-      notes: 'Luna de miel - Solicita decoración romántica'
-    },
-    {
-      name: 'Alejandro Torres',
-      email: 'alex.torres@empresa.com',
-      phone: '+34 689 654 321',
-      notes: 'Escapada de fin de semana'
-    }
-  ];
-
-  // Seleccionar cliente aleatorio
-  const randomClient = tempClients[Math.floor(Math.random() * tempClients.length)];
-
-  // Generar fechas aleatorias realistas
-  const today = new Date();
-  const startDays = Math.floor(Math.random() * 30) + 2; // Entre 2 y 31 días
-  const duration = Math.floor(Math.random() * 6) + 1; // Entre 1 y 6 días
-
-  const startDate = new Date(today);
-  startDate.setDate(today.getDate() + startDays);
-
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + duration);
+  const [tours, setTours] = useState<any[]>([]);
+  const [clubs, setClubs] = useState<any[]>([]);
+  const [yachts, setYachts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingYachtDetails, setLoadingYachtDetails] = useState(false);
 
   const [formData, setFormData] = useState<ReservationForm>({
-    selectedYacht: null,
-    clientName: randomClient.name,
-    clientEmail: randomClient.email,
-    clientPhone: randomClient.phone,
-    startDate: startDate.toISOString().split('T')[0],
-    endDate: endDate.toISOString().split('T')[0],
-    notes: randomClient.notes
+    selectedType: '',
+    selectedItem: null,
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    reservationDate: '',
+    quantity: 1,
+    description: ''
   });
 
-  const calculateDays = (start: string, end: string): number => {
-    if (!start || !end) return 0;
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  // Cargar datos según el tipo seleccionado
+  useEffect(() => {
+    if (formData.selectedType && isOpen) {
+      loadDataByType(formData.selectedType);
+    }
+  }, [formData.selectedType, isOpen]);
+
+  const loadDataByType = async (type: 'yacht' | 'tour' | 'club') => {
+    setLoading(true);
+    try {
+      switch (type) {
+        case 'tour':
+          const toursResponse = await APIs.getAllTours();
+          console.log('Tours response:', toursResponse);
+          if (toursResponse && (toursResponse as any).data) {
+            setTours((toursResponse as any).data);
+          } else {
+            setTours([]);
+          }
+          break;
+        case 'club':
+          const clubsResponse = await APIs.getAllClubs();
+          console.log('Clubs response:', clubsResponse);
+          if (clubsResponse && (clubsResponse as any).data) {
+            setClubs((clubsResponse as any).data);
+          } else {
+            setClubs([]);
+          }
+          break;
+        case 'yacht':
+          // Hacer petición para obtener todos los yates
+          const yachtsResponse = await APIs.getYachtsAll({});
+          console.log('Yachts response:', yachtsResponse);
+          if (yachtsResponse && (yachtsResponse as any).data) {
+            setYachts((yachtsResponse as any).data);
+          } else {
+            setYachts([]);
+          }
+          break;
+      }
+    } catch (error) {
+      console.error(`Error loading ${type}s:`, error);
+      // Limpiar datos en caso de error
+      if (type === 'tour') setTours([]);
+      if (type === 'club') setClubs([]);
+      if (type === 'yacht') setYachts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const calculateTotalPrice = (): number => {
-    if (!formData.selectedYacht || !formData.startDate || !formData.endDate) return 0;
-    const days = calculateDays(formData.startDate, formData.endDate);
-    return formData.selectedYacht.price * days;
+    if (!formData.selectedItem || !formData.reservationDate) return 0;
+    const pricePerItem = formData.selectedItem.pricing && formData.selectedItem.pricing.length > 0 
+      ? formData.selectedItem.pricing[0].price 
+      : 0;
+    return pricePerItem * formData.quantity;
   };
 
-  const generateRandomData = () => {
-    const randomClient = tempClients[Math.floor(Math.random() * tempClients.length)];
-    const today = new Date();
-    const startDays = Math.floor(Math.random() * 30) + 2;
-    const duration = Math.floor(Math.random() * 6) + 1;
-
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() + startDays);
-
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + duration);
-
-    setFormData(prev => ({
-      ...prev,
-      clientName: randomClient.name,
-      clientEmail: randomClient.email,
-      clientPhone: randomClient.phone,
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
-      notes: randomClient.notes
-    }));
-  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-MX', {
@@ -122,9 +109,69 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
     }).format(price);
   };
 
-  const handleYachtSelect = (yacht: any) => {
-    setFormData(prev => ({ ...prev, selectedYacht: yacht }));
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const type = e.target.value as 'yacht' | 'tour' | 'club' | '';
+    setFormData(prev => ({ 
+      ...prev, 
+      selectedType: type, 
+      selectedItem: null 
+    }));
+  };
+
+  const handleItemSelect = async (item: any) => {
+    if (formData.selectedType === 'yacht') {
+      // Si es un yate, obtener detalles completos
+      setLoadingYachtDetails(true);
+      try {
+        const yachtDetailsResponse = await APIs.getYachtsById(item.id);
+        console.log('Yacht details response:', yachtDetailsResponse);
+        if (yachtDetailsResponse && (yachtDetailsResponse as any).data) {
+          setFormData(prev => ({ ...prev, selectedItem: (yachtDetailsResponse as any).data }));
+        } else {
+          setFormData(prev => ({ ...prev, selectedItem: item }));
+        }
+      } catch (error) {
+        console.error('Error loading yacht details:', error);
+        setFormData(prev => ({ ...prev, selectedItem: item }));
+      } finally {
+        setLoadingYachtDetails(false);
+      }
+    } else {
+      // Para tours y clubs, usar directamente el item
+      setFormData(prev => ({ ...prev, selectedItem: item }));
+    }
     setCurrentStep(2);
+  };
+
+  const getCurrentItems = () => {
+    switch (formData.selectedType) {
+      case 'yacht':
+        return yachts || [];
+      case 'tour':
+        return tours || [];
+      case 'club':
+        return clubs || [];
+      default:
+        return [];
+    }
+  };
+
+  const hasItems = () => {
+    const items = getCurrentItems();
+    return items.length > 0;
+  };
+
+  const getItemTypeLabel = () => {
+    switch (formData.selectedType) {
+      case 'yacht':
+        return 'Yate';
+      case 'tour':
+        return 'Tour';
+      case 'club':
+        return 'Club';
+      default:
+        return 'Item';
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -134,33 +181,35 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.selectedYacht) return;
+    if (!formData.selectedItem) return;
 
-    const totalDays = calculateDays(formData.startDate, formData.endDate);
-    const totalPrice = calculateTotalPrice();
+    // Crear objeto de reserva según el schema del store
+    const reservationData = {
+      yachtId: formData.selectedType === 'yacht' ? formData.selectedItem.id : undefined,
+      yachtName: formData.selectedItem.name,
+      clientName: `${formData.firstName} ${formData.lastName}`,
+      clientEmail: formData.email,
+      clientPhone: formData.phone,
+      startDate: formData.reservationDate,
+      endDate: formData.reservationDate, // Mismo día por ahora
+      totalDays: 1,
+      totalPrice: calculateTotalPrice(),
+      status: 'pending' as const
+    };
 
-    addReservation({
-      yachtId: formData.selectedYacht.id,
-      yachtName: formData.selectedYacht.name,
-      clientName: formData.clientName,
-      clientEmail: formData.clientEmail,
-      clientPhone: formData.clientPhone,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      totalDays,
-      totalPrice,
-      status: 'pending'
-    });
+    addReservation(reservationData);
 
     // Reset form and close modal
     setFormData({
-      selectedYacht: null,
-      clientName: '',
-      clientEmail: '',
-      clientPhone: '',
-      startDate: '',
-      endDate: '',
-      notes: ''
+      selectedType: '',
+      selectedItem: null,
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      reservationDate: '',
+      quantity: 1,
+      description: ''
     });
     setCurrentStep(1);
     onClose();
@@ -169,13 +218,15 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
   const handleClose = () => {
     setCurrentStep(1);
     setFormData({
-      selectedYacht: null,
-      clientName: '',
-      clientEmail: '',
-      clientPhone: '',
-      startDate: '',
-      endDate: '',
-      notes: ''
+      selectedType: '',
+      selectedItem: null,
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      reservationDate: '',
+      quantity: 1,
+      description: ''
     });
     onClose();
   };
@@ -200,7 +251,7 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
         <div className="progress-steps">
           <div className={`step ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
             <div className="step-number">1</div>
-            <span>Seleccionar Yate</span>
+            <span>Seleccionar Tipo</span>
           </div>
           <div className="step-line"></div>
           <div className={`step ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
@@ -216,135 +267,247 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
 
         {/* Modal Content */}
         <div className="modal-content">
-          {/* Step 1: Yacht Selection */}
+          {/* Step 1: Type Selection */}
           {currentStep === 1 && (
             <div className="step-content">
-              <h3 className="step-title">Selecciona un Yate</h3>
-              <p className="step-description">Elige el yate perfecto para la reserva</p>
+              <h3 className="step-title">Selecciona el Tipo de Reserva</h3>
+              <p className="step-description">Elige entre yates, tours o clubs</p>
               
-              <div className="yachts-grid">
-                {yachts.map((yacht) => (
-                  <div 
-                    key={yacht.id} 
-                    className={`yacht-card ${!yacht.available ? 'unavailable' : ''}`}
-                    onClick={() => yacht.available && handleYachtSelect(yacht)}
-                  >
-                    <div className="yacht-image">
-                      <img src={yacht.image} alt={yacht.name} />
-                      {!yacht.available && (
-                        <div className="unavailable-overlay">
-                          <span className="material-icons">block</span>
-                          <span>No Disponible</span>
-                        </div>
-                      )}
+              {/* Type Selection Dropdown */}
+              <div className="type-selection-container">
+                <div className="form-group">
+                  <label htmlFor="reservationType">Tipo de Reserva *</label>
+                  <div className="select-wrapper">
+                    <span className="material-icons">expand_more</span>
+                    <select
+                      id="reservationType"
+                      value={formData.selectedType}
+                      onChange={handleTypeChange}
+                      className="type-select"
+                      required
+                    >
+                      <option value="">Selecciona un tipo...</option>
+                      <option value="yacht">Yates</option>
+                      <option value="tour">Tours</option>
+                      <option value="club">Clubs</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Selection */}
+              {formData.selectedType && (
+                <div className="items-selection">
+                  <h4 className="items-title">Selecciona un {getItemTypeLabel()}</h4>
+                  {loading ? (
+                    <div className="loading">
+                      <span className="material-icons">refresh</span>
+                      <span>Cargando...</span>
+                    </div>
+                  ) : hasItems() ? (
+                    <div className="items-grid">
+                      {getCurrentItems().map((item) => (
+                        <div 
+                          key={item.id} 
+                          className={`item-card ${item.status !== 'Activo' ? 'unavailable' : ''}`}
+                          onClick={() => item.status === 'Activo' && handleItemSelect(item)}
+                        >
+                          <div className="item-image">
+                            <img 
+                              src={
+                                (item.images && item.images.length > 0) 
+                                  ? item.images[0].url 
+                                  : '/placeholder-image.jpg'
+                              } 
+                              alt={item.name} 
+                            />
+                            {item.status !== 'Activo' && (
+                              <div className="unavailable-overlay">
+                                <span className="material-icons">block</span>
+                                <span>No Disponible</span>
+                              </div>
+                            )}
                     </div>
                     
-                    <div className="yacht-info">
-                      <div className="yacht-header">
-                        <h4 className="yacht-name">{yacht.name}</h4>
-                        <span className="yacht-type">{yacht.type}</span>
-                      </div>
+                          <div className="item-info">
+                            <div className="item-header">
+                              <h5 className="item-name">{item.name}</h5>
+                              <span className="item-type">{item.yachtCategory?.name || item.type || item.category}</span>
+                            </div>
                       
-                      <p className="yacht-description">{yacht.description}</p>
+                            <p className="item-description">{item.description}</p>
                       
-                      <div className="yacht-details">
-                        <div className="detail">
-                          <span className="material-icons sm">group</span>
-                          <span>{yacht.capacity} personas</span>
-                        </div>
-                        <div className="detail">
-                          <span className="material-icons sm">payments</span>
-                          <span>{formatPrice(yacht.price)}/hora</span>
-                        </div>
-                      </div>
+                            <div className="item-details">
+                              {item.capacity && (
+                                <div className="detail">
+                                  <span className="material-icons sm">group</span>
+                                  <span>{item.capacity} personas</span>
+                                </div>
+                              )}
+                              {item.length && (
+                                <div className="detail">
+                                  <span className="material-icons sm">straighten</span>
+                                  <span>{item.length} ft</span>
+                                </div>
+                              )}
+                              {item.pricing && item.pricing.length > 0 && (
+                                <div className="detail">
+                                  <span className="material-icons sm">payments</span>
+                                  <span>{formatPrice(item.pricing[0].price)}/{item.pricing[0].hours}h</span>
+                                </div>
+                              )}
+                              {item.location && (
+                                <div className="detail">
+                                  <span className="material-icons sm">location_on</span>
+                                  <span>{item.location}</span>
+                                </div>
+                              )}
+                            </div>
                       
-                      <div className="yacht-features">
-                        {yacht.features.slice(0, 3).map((feature, index) => (
+                            {item.features && (
+                              <div className="item-features">
+                                {typeof item.features === 'string' ? (
+                                  <span className="feature-tag">
+                                    {item.features}
+                                  </span>
+                                ) : Array.isArray(item.features) && item.features.length > 0 ? (
+                                  <>
+                                    {item.features.slice(0, 3).map((feature: any, index: number) => (
                           <span key={index} className="feature-tag">
                             {feature}
                           </span>
                         ))}
-                        {yacht.features.length > 3 && (
+                                    {item.features.length > 3 && (
                           <span className="feature-tag more">
-                            +{yacht.features.length - 3} más
+                                        +{item.features.length - 3} más
                           </span>
                         )}
+                                  </>
+                                ) : null}
                       </div>
+                            )}
                       
-                      {yacht.available && (
-                        <button className="select-yacht-btn">
-                          <span className="material-icons">check_circle</span>
-                          Seleccionar
-                        </button>
-                      )}
+                            {item.status === 'Activo' && (
+                              <button className="select-item-btn">
+                                <span className="material-icons">check_circle</span>
+                                Seleccionar
+                              </button>
+                            )}
                     </div>
                   </div>
                 ))}
               </div>
+                  ) : (
+                    <div className="no-items">
+                      <span className="material-icons">info</span>
+                      <p>No hay {getItemTypeLabel().toLowerCase()}s disponibles en este momento.</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
           {/* Step 2: Client Data */}
           {currentStep === 2 && (
             <div className="step-content">
-              <div className="step-header">
-                <button 
-                  className="back-btn"
-                  onClick={() => setCurrentStep(1)}
-                >
-                  <span className="material-icons">arrow_back</span>
-                  Cambiar Yate
-                </button>
-                <div className="selected-yacht-summary">
-                  <span className="material-icons">sailing</span>
-                  <span>{formData.selectedYacht?.name}</span>
-                  <span className="price">{formatPrice(formData.selectedYacht?.price || 0)}/hora</span>
+              {loadingYachtDetails ? (
+                <div className="loading">
+                  <span className="material-icons">refresh</span>
+                  <span>Cargando detalles del yate...</span>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="step-header">
+                    <button 
+                      className="back-btn"
+                      onClick={() => setCurrentStep(1)}
+                    >
+                      <span className="material-icons">arrow_back</span>
+                      Cambiar {getItemTypeLabel()}
+                    </button>
+                    <div className="selected-item-summary">
+                      <span className="material-icons">
+                        {formData.selectedType === 'yacht' ? 'sailing' : 
+                         formData.selectedType === 'tour' ? 'explore' : 'nightlife'}
+                      </span>
+                      <span>{formData.selectedItem?.name}</span>
+                      <span className="price">
+                        {formData.selectedItem?.pricing?.[0]?.price 
+                          ? formatPrice(formData.selectedItem.pricing[0].price) 
+                          : 'Precio no disponible'}
+                      </span>
+                    </div>
+                  </div>
 
               <div className="step-title-row">
                 <div>
-                  <h3 className="step-title">Datos del Cliente</h3>
-                  <p className="step-description">Completa la información de contacto</p>
+                  <h3 className="step-title">Datos de la Reserva</h3>
+                  <p className="step-description">Completa la información para proceder con la reserva</p>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-outline random-data-btn"
-                  onClick={generateRandomData}
-                  title="Generar datos aleatorios"
-                >
-                  <span className="material-icons">shuffle</span>
-                  Datos Random
-                </button>
               </div>
               
               <form className="client-form">
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="clientName">Nombre Completo *</label>
+                    <label htmlFor="firstName">Nombre *</label>
                     <div className="input-wrapper">
                       <span className="material-icons">person</span>
                       <input
                         type="text"
-                        id="clientName"
-                        name="clientName"
-                        value={formData.clientName}
+                        id="firstName"
+                        name="firstName"
+                        value={formData.firstName}
                         onChange={handleInputChange}
-                        placeholder="Nombre del cliente"
+                        placeholder="Nombre"
                         required
                       />
                     </div>
                   </div>
                   
                   <div className="form-group">
-                    <label htmlFor="clientPhone">Teléfono *</label>
+                    <label htmlFor="lastName">Apellido *</label>
+                    <div className="input-wrapper">
+                      <span className="material-icons">person</span>
+                      <input
+                        type="text"
+                        id="lastName"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        placeholder="Apellido"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="email">Correo Electrónico *</label>
+                    <div className="input-wrapper">
+                      <span className="material-icons">email</span>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="correo@email.com"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="phone">Teléfono *</label>
                     <div className="input-wrapper">
                       <span className="material-icons">phone</span>
                       <input
                         type="tel"
-                        id="clientPhone"
-                        name="clientPhone"
-                        value={formData.clientPhone}
+                        id="phone"
+                        name="phone"
+                        value={formData.phone}
                         onChange={handleInputChange}
                         placeholder="+34 666 777 888"
                         required
@@ -353,32 +516,16 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="clientEmail">Correo Electrónico *</label>
-                  <div className="input-wrapper">
-                    <span className="material-icons">email</span>
-                    <input
-                      type="email"
-                      id="clientEmail"
-                      name="clientEmail"
-                      value={formData.clientEmail}
-                      onChange={handleInputChange}
-                      placeholder="cliente@email.com"
-                      required
-                    />
-                  </div>
-                </div>
-
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="startDate">Fecha de Inicio *</label>
+                    <label htmlFor="reservationDate">Fecha de Reserva *</label>
                     <div className="input-wrapper">
                       <span className="material-icons">event</span>
                       <input
                         type="date"
-                        id="startDate"
-                        name="startDate"
-                        value={formData.startDate}
+                        id="reservationDate"
+                        name="reservationDate"
+                        value={formData.reservationDate}
                         onChange={handleInputChange}
                         min={new Date().toISOString().split('T')[0]}
                         required
@@ -387,16 +534,16 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
                   </div>
                   
                   <div className="form-group">
-                    <label htmlFor="endDate">Fecha de Fin *</label>
+                    <label htmlFor="quantity">Cantidad *</label>
                     <div className="input-wrapper">
-                      <span className="material-icons">event</span>
+                      <span className="material-icons">group</span>
                       <input
-                        type="date"
-                        id="endDate"
-                        name="endDate"
-                        value={formData.endDate}
+                        type="number"
+                        id="quantity"
+                        name="quantity"
+                        value={formData.quantity}
                         onChange={handleInputChange}
-                        min={formData.startDate || new Date().toISOString().split('T')[0]}
+                        min="1"
                         required
                       />
                     </div>
@@ -404,11 +551,11 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="notes">Notas Adicionales</label>
+                  <label htmlFor="description">Descripción</label>
                   <textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
+                    id="description"
+                    name="description"
+                    value={formData.description}
                     onChange={handleInputChange}
                     placeholder="Comentarios, solicitudes especiales, etc."
                     rows={3}
@@ -416,17 +563,17 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
                 </div>
 
                 {/* Reservation Summary */}
-                {formData.startDate && formData.endDate && (
+                {formData.reservationDate && formData.quantity > 0 && (
                   <div className="reservation-summary">
                     <h4>Resumen de la Reserva</h4>
                     <div className="summary-details">
                       <div className="detail-row">
-                        <span>Duración:</span>
-                        <span>{calculateDays(formData.startDate, formData.endDate)} días</span>
+                        <span>Cantidad:</span>
+                        <span>{formData.quantity}</span>
                       </div>
                       <div className="detail-row">
-                        <span>Precio por hora:</span>
-                        <span>{formatPrice(formData.selectedYacht?.price || 0)}</span>
+                        <span>Precio unitario:</span>
+                        <span>{formatPrice(formData.selectedItem?.pricing?.[0]?.price || 0)}</span>
                       </div>
                       <div className="detail-row total">
                         <span>Total:</span>
@@ -436,6 +583,8 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
                   </div>
                 )}
               </form>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -456,7 +605,7 @@ const ReservationModal: React.FC<CreateReservationModalProps> = ({ isOpen, onClo
               <button 
                 className="btn btn-primary"
                 onClick={handleSubmit}
-                disabled={!formData.clientName || !formData.clientEmail || !formData.clientPhone || !formData.startDate || !formData.endDate}
+                disabled={!formData.selectedItem || !formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.reservationDate || formData.quantity < 1}
               >
                 <span className="material-icons">check_circle</span>
                 Crear Reserva
